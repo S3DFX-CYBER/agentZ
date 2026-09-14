@@ -142,7 +142,7 @@
               ];
             };
             agentImage = pkgs.dockerTools.buildLayeredImage {
-              name = "murtazau/agentz-agent";
+              name = "public.ecr.aws/k9v9d5v2/agentz/agent";
               tag = "latest";
               contents = [
                 (pkgs.buildEnv {

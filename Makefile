@@ -1,8 +1,8 @@
 SHELL := bash
 .SHELLFLAGS := -euo pipefail -c
 
-IMAGE ?= murtazau/agentz:latest
-AGENT_IMAGE ?= murtazau/agentz-agent:latest
+IMAGE ?= public.ecr.aws/k9v9d5v2/agentz:latest
+AGENT_IMAGE ?= public.ecr.aws/k9v9d5v2/agentz/agent:latest
 BETTER_AUTH_URL ?= http://localhost:3000
 GATEWAY_JWT_AUDIENCE ?= agentz-gateway
 POSTGRES_DSN ?= postgresql://postgres:postgres@localhost:5432/postgres

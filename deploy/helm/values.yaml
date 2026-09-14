@@ -53,7 +53,7 @@ manager:
         namespace: ""
         annotations: {}
         audiences:
-          - https://kubernetes.default.svc
+        - https://kubernetes.default.svc
       openBao:
         server: http://openbao.openbao.svc.cluster.local:8200
         kvMount: kv
@@ -87,7 +87,7 @@ manager:
 
   image:
     # Image repository for the `agentz` binary used by the manager pod.
-    repository: murtazau/agentz
+    repository: public.ecr.aws/k9v9d5v2/agentz
 
     # Image tag for the manager image.
     tag: latest
@@ -196,7 +196,7 @@ manager:
 
     # Image used for controller-managed workloads and agent filesystem
     # sidecars.
-    controllerImage: murtazau/agentz:latest
+    controllerImage: public.ecr.aws/k9v9d5v2/agentz:latest
 
     # Default image used for Agent resources created by the system.
     agentImage: ""
@@ -406,7 +406,7 @@ gateway:
 
   image:
     # Image repository for the gateway workload.
-    repository: murtazau/agentz
+    repository: public.ecr.aws/k9v9d5v2/agentz
 
     # Image tag for the gateway workload.
     tag: latest
@@ -599,7 +599,7 @@ observer:
 
   image:
     # Image repository for the observer workload.
-    repository: murtazau/agentz
+    repository: public.ecr.aws/k9v9d5v2/agentz
 
     # Image tag for the observer workload.
     tag: latest
@@ -723,7 +723,7 @@ web:
 
   image:
     # Image repository for the built Next.js web application.
-    repository: murtazau/agentz-web
+    repository: public.ecr.aws/k9v9d5v2/agentz/web
 
     # Image tag for the web workload.
     tag: latest
