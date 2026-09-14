@@ -885,11 +885,11 @@ type Invitation struct {
 	OrganizationID string           `json:"organization_id"`
 	Email          string           `json:"email"`
 	Role           pgtype.Text      `json:"role"`
+	TeamID         pgtype.Text      `json:"team_id"`
 	Status         string           `json:"status"`
 	ExpiresAt      pgtype.Timestamp `json:"expires_at"`
 	CreatedAt      pgtype.Timestamp `json:"created_at"`
 	InviterID      string           `json:"inviter_id"`
-	TeamID         pgtype.Text      `json:"team_id"`
 }
 
 type InvitationRole struct {
@@ -1305,11 +1305,11 @@ type User struct {
 
 type UserPreference struct {
 	UserID         string           `json:"user_id"`
+	Theme          ThemePreference  `json:"theme"`
 	UpdateSandbox  bool             `json:"update_sandbox"`
+	ShowTourButton bool             `json:"show_tour_button"`
 	CreatedAt      pgtype.Timestamp `json:"created_at"`
 	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
-	Theme          ThemePreference  `json:"theme"`
-	ShowTourButton bool             `json:"show_tour_button"`
 }
 
 type Verification struct {

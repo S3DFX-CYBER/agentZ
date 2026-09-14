@@ -1,5 +1,5 @@
 # Build the agentz binary
-FROM golang:1.26 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -26,6 +26,10 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -trimpat
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/agentz .
+COPY --from=builder /workspace/internal/gateway/db/migrations /internal/gateway/db/migrations
+COPY --from=builder /workspace/internal/observer/db/migrations /internal/observer/db/migrations
+COPY --from=builder /workspace/internal/gateway/workflow/db/migrations /internal/gateway/workflow/db/migrations
+COPY --from=builder /workspace/internal/gateway/dashboard/db/migrations /internal/gateway/dashboard/db/migrations
 USER 65532:65532
 
 ENTRYPOINT ["/agentz"]

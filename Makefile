@@ -28,6 +28,7 @@ all: generate lint build
 
 .PHONY: generate
 generate:
+	cd web && bun run gen:db-schema
 	sqlc generate
 	go run ./hack/inference/generate_providers.go
 	go run ./hack/openapi/generate_opencode_gateway.go

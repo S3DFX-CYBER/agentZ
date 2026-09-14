@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier . --write",
     "gen:openapi-client": "openapi-ts",
+    "gen:db-schema": "drizzle-kit export > db/schema.sql",
+    "db:migrate": "drizzle-kit migrate",
     "gen:auth-schema": "bunx auth@1.6.22 generate --config ./lib/auth.ts --output ./db/auth-schema.ts --yes"
   },
   "dependencies": {
