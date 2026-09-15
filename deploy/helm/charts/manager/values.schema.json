@@ -3,7 +3,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "global": { "type": "object" },
+    "global": { "type": "object", "properties": { "secretName": { "type": "string" } } },
     "enabled": { "type": "boolean" },
     "nameOverride": { "type": "string" },
     "fullnameOverride": { "type": "string" },
@@ -99,10 +99,6 @@
         "skillsS3Endpoint": { "type": "string", "minLength": 1 },
         "skillsS3Region": { "type": "string", "minLength": 1 },
         "skillsS3Bucket": { "type": "string", "minLength": 1 },
-        "skillsS3AccessKeyIDSecretName": { "type": "string", "minLength": 1 },
-        "skillsS3AccessKeyIDSecretKey": { "type": "string", "minLength": 1 },
-        "skillsS3SecretAccessKeySecretName": { "type": "string", "minLength": 1 },
-        "skillsS3SecretAccessKeySecretKey": { "type": "string", "minLength": 1 },
         "openBaoAddr": { "type": "string", "minLength": 1 },
         "managerOpenBaoAddr": { "type": "string" },
         "openBaoSecretMountPath": { "type": "string", "minLength": 1 },
@@ -152,6 +148,43 @@
                   }
                 },
                 "qosClass": { "enum": ["guaranteed", "burstable", "bestEffort"] }
+              }
+            }
+          }
+        },
+        "tenantDashboardQuota": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dashboardsPerAgent", "widgetsPerDashboard", "publish", "query"],
+          "properties": {
+            "dashboardsPerAgent": { "type": "integer", "minimum": 1 },
+            "widgetsPerDashboard": { "type": "integer", "minimum": 1 },
+            "publish": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requestBytes", "recordsPerRequest", "requestsPerMinutePerAgent", "acceptedBytesPerDay", "temporalRecordsPerDay", "retainedTemporalRecords", "latestBytesPerAgent"],
+              "properties": {
+                "requestBytes": { "type": "string", "minLength": 1 },
+                "recordsPerRequest": { "type": "integer", "minimum": 1 },
+                "requestsPerMinutePerAgent": { "type": "integer", "minimum": 1 },
+                "acceptedBytesPerDay": { "type": "string", "minLength": 1 },
+                "temporalRecordsPerDay": { "type": "integer", "minimum": 1 },
+                "retainedTemporalRecords": { "type": "integer", "minimum": 1 },
+                "latestBytesPerAgent": { "type": "string", "minLength": 1 }
+              }
+            },
+            "query": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requestsPerMinutePerUser", "returnedCellsPerHour", "concurrentRequests", "cellsPerRequest", "responseBytes", "pointsPerSeries", "timeout"],
+              "properties": {
+                "requestsPerMinutePerUser": { "type": "integer", "minimum": 1 },
+                "returnedCellsPerHour": { "type": "integer", "minimum": 1 },
+                "concurrentRequests": { "type": "integer", "minimum": 1 },
+                "cellsPerRequest": { "type": "integer", "minimum": 1 },
+                "responseBytes": { "type": "string", "minLength": 1 },
+                "pointsPerSeries": { "type": "integer", "minimum": 1 },
+                "timeout": { "type": "string", "minLength": 1 }
               }
             }
           }

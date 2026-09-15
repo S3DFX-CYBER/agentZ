@@ -70,7 +70,7 @@ const (
 	nixLinkVolume                  = "nix-link"
 	nixLinkMount                   = "/tmp/nix-link"
 	nixLinkStage                   = "/tmp/nix-link"
-	nixInitImage                   = "murtazau/agentz-init:latest"
+	nixInitImage                   = "public.ecr.aws/k9v9d5v2/agentz/init:latest"
 	homeInitName                   = "home-init"
 	agentRuntimeUID                = int64(1000)
 	agentRuntimeGID                = int64(1000)
@@ -92,7 +92,7 @@ const (
 	agentHomeDir                   = "/home/agentz"
 	opencodeImmutableSkillsPath    = "/var/lib/agentz/skills/immutable"
 	opencodeWritableSkillsPath     = agentHomeDir + "/.agents/skills"
-	opencodeBundledSkillsPath      = "/etc/opencode/skills/defaults"
+	opencodeBundledSkillsPath      = "/etc/opencode/skills/core"
 	immutableSkillsBucketVolume    = "immutable-skills-bucket"
 	immutableSkillsSecretMount     = "/var/run/secrets/agentz/immutable-skills-bucket"
 	immutableSkillsInitName        = "immutable-skills-init"

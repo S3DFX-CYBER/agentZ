@@ -1,8 +1,8 @@
 SHELL := bash
 .SHELLFLAGS := -euo pipefail -c
 
-IMAGE ?= murtazau/agentz:latest
-AGENT_IMAGE ?= murtazau/agentz-agent:latest
+IMAGE ?= public.ecr.aws/k9v9d5v2/agentz:latest
+AGENT_IMAGE ?= public.ecr.aws/k9v9d5v2/agentz/agent:latest
 BETTER_AUTH_URL ?= http://localhost:3000
 GATEWAY_JWT_AUDIENCE ?= agentz-gateway
 POSTGRES_DSN ?= postgresql://postgres:postgres@localhost:5432/postgres
@@ -28,11 +28,12 @@ all: generate lint build
 
 .PHONY: generate
 generate:
+	cd web && bun run gen:db-schema
 	sqlc generate
 	go run ./hack/inference/generate_providers.go
 	go run ./hack/openapi/generate_opencode_gateway.go
 	oapi-codegen \
-		--include-tags agents,tenants,workspaces,event-trail,lens,secrets,sandboxes,inference,skills,mcp-connections,workflows,workflow-schedules,workflow-runs,workflow-webhooks,chat-sessions,session \
+		--include-tags agents,tenants,workspaces,event-trail,lens,secrets,sandboxes,inference,skills,mcp-connections,workflows,workflow-schedules,workflow-runs,workflow-webhooks,chat-sessions,session,dashboards \
 		-config oapi-codegen.gateway.yaml openapi/gateway.yaml
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./pkg/apis/..."
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:allowDangerousTypes=false webhook \

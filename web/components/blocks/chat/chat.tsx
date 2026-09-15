@@ -1079,7 +1079,7 @@ function ChatInner({
           </div>
         ) : !showStarter ? (
           <LegendList<TimelineRow>
-            className="h-full min-h-0 overflow-x-hidden overscroll-y-contain px-4 [overflow-anchor:none]"
+            className="h-full min-h-0 overflow-x-hidden overscroll-y-contain [overflow-anchor:none]"
             data={rows}
             estimatedItemSize={96}
             extraData={timelineIdentity}
@@ -1088,20 +1088,22 @@ function ChatInner({
             recycleItems={false}
             ListHeaderComponent={
               hasEarlierMessages ? (
-                <div className="text-muted-foreground/70 flex h-9 items-center justify-center gap-2 text-xs">
-                  {isLoadingEarlier ? (
-                    <>
-                      <Spinner />
-                      Loading earlier turns…
-                    </>
-                  ) : null}
+                <div className="mx-auto w-[calc(100%-2rem)] max-w-3xl pt-4 pb-2">
+                  <button
+                    className="text-muted-foreground/70 hover:text-foreground w-full py-1.5 text-xs disabled:cursor-default"
+                    disabled={isLoadingEarlier}
+                    onClick={() => void loadEarlier()}
+                    type="button"
+                  >
+                    {isLoadingEarlier ? "Loading earlier turns..." : "Load earlier turns"}
+                  </button>
                 </div>
               ) : (
                 <div className="h-4" />
               )
             }
             ListFooterComponent={
-              <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pt-2 pb-56">
+              <div className="mx-auto flex w-[calc(100%-2rem)] max-w-3xl flex-col gap-4 pt-2 pb-56">
                 <AgentWorkingIndicator isWorking={isBusy} />
                 <RevertDock
                   items={reverted}
@@ -1140,10 +1142,6 @@ function ChatInner({
                 contentOffset.y + layoutMeasurement.height >= contentSize.height - 24
               )
             }}
-            onStartReached={() => {
-              if (hasEarlierMessages && !isLoadingEarlier) void loadEarlier()
-            }}
-            onStartReachedThreshold={0.35}
             ref={timelineRef}
             renderItem={({ item }) => (
               <div
@@ -1154,8 +1152,8 @@ function ChatInner({
                       ? "pb-1.5"
                       : "pb-4",
                   item.type === "assistant-error"
-                    ? "-mx-4 w-[calc(100%+2rem)] max-w-none"
-                    : "mx-auto w-full max-w-3xl"
+                    ? "w-full"
+                    : "mx-auto w-[calc(100%-2rem)] max-w-3xl"
                 )}
               >
                 <TimelineRowView
@@ -1918,7 +1916,7 @@ function TimelineRowView({
         <div className="text-muted-foreground text-sm">
           <span className="inline-flex items-center gap-2">
             <Spinner className="size-3.5" />
-            <span className="animate-pulse">Thinking…</span>
+            <span className="animate-pulse">Thinking...</span>
           </span>
         </div>
       )
@@ -1991,7 +1989,7 @@ function TimelineRowView({
 
     case "assistant-error": {
       return (
-        <Alert variant="destructive">
+        <Alert className="px-4" variant="destructive">
           <AlertTitle>{row.label}</AlertTitle>
           <AlertDescription>{row.body}</AlertDescription>
         </Alert>

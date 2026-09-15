@@ -1,6 +1,5 @@
 "use client"
 
-import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Brain, ChevronRightIcon, Cpu, Layers3 } from "lucide-react"
@@ -11,7 +10,9 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import type { WorkspacePath } from "@/data/types"
 import { resourceLabels } from "@/lib/resource-labels"
 
 export function NavInference({
@@ -19,14 +20,15 @@ export function NavInference({
   showPools,
   showProviders,
 }: {
-  rootPath: string
+  rootPath: WorkspacePath
   showPools: boolean
   showProviders: boolean
 }) {
   const path = usePathname()
-  const inferencePath = `${rootPath}/inference`
-  const providersPath = `${inferencePath}/providers` as Route
-  const poolsPath = `${inferencePath}/pools` as Route
+  const { setOpenMobile } = useSidebar()
+  const inferencePath = `${rootPath}/inference` as const
+  const providersPath = `${inferencePath}/providers` as const
+  const poolsPath = `${inferencePath}/pools` as const
 
   return (
     <Collapsible
@@ -35,16 +37,27 @@ export function NavInference({
       className="group/inference"
     >
       <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Inference">
-            <Cpu aria-hidden="true" />
-            <span>Inference</span>
-            <ChevronRightIcon
-              aria-hidden="true"
-              className="ml-auto transition-transform duration-200 group-data-[state=open]/inference:rotate-90"
-            />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
+        {/* Driver replaces its target's ARIA attributes. Preserve the trigger's. */}
+        <div
+          data-tour="inference"
+          data-tour-description={[
+            showProviders ? "Add providers to give your agents access to AI models." : "",
+            showPools ? "Pools group models together and allow automatic fallback." : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton tooltip="Inference">
+              <Cpu aria-hidden="true" />
+              <span>Inference</span>
+              <ChevronRightIcon
+                aria-hidden="true"
+                className="ml-auto transition-transform duration-200 group-data-[state=open]/inference:rotate-90"
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+        </div>
         <CollapsibleContent>
           <SidebarMenuSub>
             {showProviders ? (
@@ -53,6 +66,7 @@ export function NavInference({
                   <Link
                     aria-current={path === providersPath ? "page" : undefined}
                     href={providersPath}
+                    onNavigate={() => setOpenMobile(false)}
                   >
                     <Brain aria-hidden="true" />
                     <span>{resourceLabels.inference.collection}</span>
@@ -63,7 +77,11 @@ export function NavInference({
             {showPools ? (
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton asChild isActive={path === poolsPath}>
-                  <Link aria-current={path === poolsPath ? "page" : undefined} href={poolsPath}>
+                  <Link
+                    aria-current={path === poolsPath ? "page" : undefined}
+                    href={poolsPath}
+                    onNavigate={() => setOpenMobile(false)}
+                  >
                     <Layers3 aria-hidden="true" />
                     <span>Pools</span>
                   </Link>

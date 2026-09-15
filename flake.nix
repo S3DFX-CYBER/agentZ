@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
   outputs = { nixpkgs, nixpkgs-oapi-codegen, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ]
       (system:
         let
           pkgs = import nixpkgs { inherit system; };
@@ -18,7 +18,7 @@
             src = ./.;
             subPackages = [ "cmd/agentz" ];
             ldflags = [ "-s" "-w" ];
-            vendorHash = "sha256-OQCX2bozUS1X8CKzoH4XTg5HAJL5enffg03Ro1t9BqE=";
+            vendorHash = "sha256-SDLfrFgy8Fvx5nkfk/z03eA4NbYTQE3N43miJQH+Uys=";
           };
           nodeModules = pkgs.stdenvNoCC.mkDerivation {
             pname = "opencode-config-node_modules";
@@ -48,7 +48,12 @@
             dontFixup = true;
             outputHashMode = "recursive";
             outputHashAlgo = "sha256";
-            outputHash = "sha256-4YQOwvbC6pep7vV6Tfuq4bdV3n3IsKeqFKM9rwYBZsg=";
+            # Optional native packages differ by platform; sharing a hash
+            # would let an Arm build reuse x64 node_modules from the cache.
+            outputHash = {
+              x86_64-linux = "sha256-1njC/e3AOpXCKlSYF9JGFHasjd8LM/Q12e/5IU/Tm/4=";
+              aarch64-linux = "sha256-PXgl3XfvgFJ8W9bT3uqHOvfsLnW4y+sVQrbWKTUr0wQ=";
+            }.${system};
           };
           cfg = pkgs.runCommand "opencode-config" { } ''
             mkdir -p \
@@ -137,7 +142,7 @@
               ];
             };
             agentImage = pkgs.dockerTools.buildLayeredImage {
-              name = "murtazau/agentz-agent";
+              name = "public.ecr.aws/k9v9d5v2/agentz/agent";
               tag = "latest";
               contents = [
                 (pkgs.buildEnv {

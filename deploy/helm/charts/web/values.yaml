@@ -1,3 +1,7 @@
+global:
+  # Operator-managed application credentials in the release namespace.
+  secretName: agentz
+
 enabled: true
 
 nameOverride: ""
@@ -14,7 +18,7 @@ strategy:
     maxSurge: 1
 
 image:
-  repository: murtazau/agentz-web
+  repository: public.ecr.aws/k9v9d5v2/agentz/web
   tag: latest
   digest: ""
   pullPolicy: IfNotPresent
@@ -102,26 +106,3 @@ env:
   nixosSearchESSchemaVersion: ""
   # Optional NixOS search branch.
   nixosSearchESBranch: ""
-
-
-secrets:
-  # Name of an existing Secret containing the keys rendered by this chart.
-  existingSecret: ""
-  # Required database DSN for Better Auth and Drizzle.
-  databaseURL: ""
-  # Required Better Auth secret.
-  betterAuthSecret: ""
-  # Required secret used to protect MCP OAuth flow cookies.
-  mcpOAuthCookieSecret: ""
-  # Optional GitHub OAuth client secret.
-  githubClientSecret: ""
-  # Optional Google OAuth client secret.
-  googleClientSecret: ""
-  # Optional static S3-compatible access key ID. The default provider chain is used when empty.
-  organizationAssetsS3AccessKeyID: ""
-  # Optional static S3-compatible secret access key.
-  organizationAssetsS3SecretAccessKey: ""
-  # Optional static S3-compatible session token.
-  organizationAssetsS3SessionToken: ""
-  # Optional NixOS search Elasticsearch password.
-  nixosSearchESPassword: ""

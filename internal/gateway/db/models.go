@@ -99,6 +99,50 @@ func (ns NullApiKeyTargetType) Value() (driver.Value, error) {
 	return string(ns.ApiKeyTargetType), nil
 }
 
+type ChatSessionGroupBy string
+
+const (
+	ChatSessionGroupByNone   ChatSessionGroupBy = "none"
+	ChatSessionGroupByAgent  ChatSessionGroupBy = "agent"
+	ChatSessionGroupByStatus ChatSessionGroupBy = "status"
+	ChatSessionGroupByDate   ChatSessionGroupBy = "date"
+)
+
+func (e *ChatSessionGroupBy) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ChatSessionGroupBy(s)
+	case string:
+		*e = ChatSessionGroupBy(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ChatSessionGroupBy: %T", src)
+	}
+	return nil
+}
+
+type NullChatSessionGroupBy struct {
+	ChatSessionGroupBy ChatSessionGroupBy `json:"chat_session_group_by"`
+	Valid              bool               `json:"valid"` // Valid is true if ChatSessionGroupBy is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullChatSessionGroupBy) Scan(value interface{}) error {
+	if value == nil {
+		ns.ChatSessionGroupBy, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ChatSessionGroupBy.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullChatSessionGroupBy) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ChatSessionGroupBy), nil
+}
+
 type ChatSessionKind string
 
 const (
@@ -841,11 +885,11 @@ type Invitation struct {
 	OrganizationID string           `json:"organization_id"`
 	Email          string           `json:"email"`
 	Role           pgtype.Text      `json:"role"`
+	TeamID         pgtype.Text      `json:"team_id"`
 	Status         string           `json:"status"`
 	ExpiresAt      pgtype.Timestamp `json:"expires_at"`
 	CreatedAt      pgtype.Timestamp `json:"created_at"`
 	InviterID      string           `json:"inviter_id"`
-	TeamID         pgtype.Text      `json:"team_id"`
 }
 
 type InvitationRole struct {
@@ -1260,11 +1304,12 @@ type User struct {
 }
 
 type UserPreference struct {
-	UserID        string           `json:"user_id"`
-	UpdateSandbox bool             `json:"update_sandbox"`
-	CreatedAt     pgtype.Timestamp `json:"created_at"`
-	UpdatedAt     pgtype.Timestamp `json:"updated_at"`
-	Theme         ThemePreference  `json:"theme"`
+	UserID         string           `json:"user_id"`
+	Theme          ThemePreference  `json:"theme"`
+	UpdateSandbox  bool             `json:"update_sandbox"`
+	ShowTourButton bool             `json:"show_tour_button"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
 type Verification struct {
@@ -1299,6 +1344,7 @@ type WorkspaceChatPreference struct {
 	LastAgentName       pgtype.Text        `json:"last_agent_name"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	GroupBy             ChatSessionGroupBy `json:"group_by"`
 }
 
 type WorkspaceInheritedResource struct {

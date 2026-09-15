@@ -1,3 +1,7 @@
+global:
+  # Operator-managed application credentials in the release namespace.
+  secretName: agentz
+
 enabled: true
 
 nameOverride: ""
@@ -13,7 +17,7 @@ inference:
       namespace: ""
       annotations: {}
       audiences:
-        - https://kubernetes.default.svc
+      - https://kubernetes.default.svc
     openBao:
       server: http://openbao.openbao.svc.cluster.local:8200
       kvMount: kv
@@ -35,7 +39,7 @@ strategy:
     maxSurge: 1
 
 image:
-  repository: murtazau/agentz
+  repository: public.ecr.aws/k9v9d5v2/agentz
   tag: latest
   digest: ""
   pullPolicy: IfNotPresent
@@ -98,7 +102,7 @@ config:
   enableHTTP2: false
   workflowRunOrphanRetention: 168h
   # Image used for controller-managed workloads and agent filesystem sidecars.
-  controllerImage: murtazau/agentz:latest
+  controllerImage: public.ecr.aws/k9v9d5v2/agentz:latest
   agentImage: ""
   agentInitImage: ""
   gatewayURL: ""
@@ -117,10 +121,6 @@ config:
   skillsS3Endpoint: http://rustfs.rustfs.svc.cluster.local:9000
   skillsS3Region: us-east-1
   skillsS3Bucket: agentz
-  skillsS3AccessKeyIDSecretName: agentz-skills-s3
-  skillsS3AccessKeyIDSecretKey: access-key-id
-  skillsS3SecretAccessKeySecretName: agentz-skills-s3
-  skillsS3SecretAccessKeySecretKey: secret-access-key
   openBaoAddr: http://openbao.openbao.svc.cluster.local:8200
   managerOpenBaoAddr: ""
   openBaoSecretMountPath: kv
@@ -150,6 +150,25 @@ config:
         cpu: 500m
         memory: 800Mi
       qosClass: guaranteed
+  tenantDashboardQuota:
+    dashboardsPerAgent: 25
+    widgetsPerDashboard: 24
+    publish:
+      requestBytes: 256Ki
+      recordsPerRequest: 100
+      requestsPerMinutePerAgent: 30
+      acceptedBytesPerDay: 64Mi
+      temporalRecordsPerDay: 50000
+      retainedTemporalRecords: 1500000
+      latestBytesPerAgent: 64Mi
+    query:
+      requestsPerMinutePerUser: 30
+      returnedCellsPerHour: 5000000
+      concurrentRequests: 4
+      cellsPerRequest: 50000
+      responseBytes: 2Mi
+      pointsPerSeries: 500
+      timeout: 5s
   watchNamespace: ""
   enableWebhooks: true
 
