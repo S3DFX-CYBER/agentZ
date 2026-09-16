@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/accuknox/agentz/internal/authorization"
+	"github.com/accuknox/agentz/internal/gateway/apiutil"
 	gatewaydb "github.com/accuknox/agentz/internal/gateway/db"
 	gatewayapi "github.com/accuknox/agentz/internal/gateway/openapi"
 )
@@ -25,10 +26,10 @@ type observabilityRequest struct {
 	limit     int
 }
 
-func (s *Service) authorizeObservability(w http.ResponseWriter, r *http.Request, agentName string) (string, bool) {
+func (s *Service) authorizeObservability(w http.ResponseWriter, r *http.Request, agentName string, sessionID *string) (string, bool) {
 	access, apiErr := s.resolveAgentAccess(r.Context(), agentName, authorization.OperationUseSharedAgent)
 	if apiErr != nil {
-		writeError(w, r, apiErr)
+		apiutil.WriteError(w, r, apiErr)
 		return "", false
 	}
 
@@ -37,7 +38,27 @@ func (s *Service) authorizeObservability(w http.ResponseWriter, r *http.Request,
 		WorkspaceID:    access.workspaceID,
 	}
 	if !access.effective.Allows(scope, authorization.OperationReadObservability) {
-		writeError(w, r, resourceForbidden(errors.New("effective Observability permission is missing")))
+		apiutil.WriteError(w, r, resourceForbidden(errors.New("effective Observability permission is missing")))
+		return "", false
+	}
+	if sessionID == nil {
+		return access.namespace, true
+	}
+	workspace, err := s.queries.GatewayGetWorkspace(r.Context(), gatewaydb.GatewayGetWorkspaceParams{
+		ID: access.workspaceID, OrganizationID: access.organizationID,
+	})
+	if err != nil {
+		apiutil.WriteInternalError(w, r, err)
+		return "", false
+	}
+	if workspace.Type != gatewaydb.WorkspaceTypeCoding {
+		return access.namespace, true
+	}
+	_, err = s.resolveCodingSession(
+		r.Context(), access, agentName, strings.TrimSpace(*sessionID),
+	)
+	if err != nil {
+		apiutil.WriteError(w, r, mapGatewayStoreError("get conversation", err))
 		return "", false
 	}
 	return access.namespace, true
@@ -48,7 +69,7 @@ func (s *Service) observabilityRequest(w http.ResponseWriter, r *http.Request, a
 	if !ok {
 		return observabilityRequest{}, false
 	}
-	namespace, ok := s.authorizeObservability(w, r, agentName)
+	namespace, ok := s.authorizeObservability(w, r, agentName, nil)
 	if !ok {
 		return observabilityRequest{}, false
 	}
@@ -69,7 +90,7 @@ func (s *Service) ListTraceSessions(w http.ResponseWriter, r *http.Request, agen
 	if !ok {
 		return
 	}
-	ns, ok := s.authorizeObservability(w, r, agentName)
+	ns, ok := s.authorizeObservability(w, r, agentName, &sessionID)
 	if !ok {
 		return
 	}
@@ -94,10 +115,10 @@ func (s *Service) ListTraceSessions(w http.ResponseWriter, r *http.Request, agen
 		startedBefore = (*params.StartedBefore).UTC()
 	}
 	if startedAfter.After(startedBefore) {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusBadRequest,
 				"invalid_request",
 				"started_after must be before or equal to started_before",
@@ -109,10 +130,10 @@ func (s *Service) ListTraceSessions(w http.ResponseWriter, r *http.Request, agen
 
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusBadRequest,
 				"invalid_request",
 				"request validation failed",
@@ -139,7 +160,7 @@ func (s *Service) ListTraceSessions(w http.ResponseWriter, r *http.Request, agen
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -181,7 +202,7 @@ func (s *Service) ListTraceSessions(w http.ResponseWriter, r *http.Request, agen
 		)
 	}
 
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListTraceSessionsResponse{
@@ -197,16 +218,16 @@ func (s *Service) ListSpans(w http.ResponseWriter, r *http.Request, agentName ga
 	if !ok {
 		return
 	}
-	ns, ok := s.authorizeObservability(w, r, agentName)
+	ns, ok := s.authorizeObservability(w, r, agentName, &sessionID)
 	if !ok {
 		return
 	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusBadRequest,
 				"invalid_request",
 				"request validation failed",
@@ -234,6 +255,7 @@ func (s *Service) ListSpans(w http.ResponseWriter, r *http.Request, agentName ga
 		gatewaydb.GatewayListSpansParams{
 			TenantNamespace: ns,
 			AgentName:       agentName,
+			SessionID:       sessionID,
 			TraceID:         traceIDBytes,
 			CursorSet:       cursorSet,
 			CursorStartTime: cursor.StartTime,
@@ -242,7 +264,7 @@ func (s *Service) ListSpans(w http.ResponseWriter, r *http.Request, agentName ga
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -260,7 +282,7 @@ func (s *Service) ListSpans(w http.ResponseWriter, r *http.Request, agentName ga
 		items = append(items, spanFromListRow(row))
 	}
 
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListSpansResponse{
@@ -276,16 +298,16 @@ func (s *Service) GetSpanDetail(w http.ResponseWriter, r *http.Request, agentNam
 	if !ok {
 		return
 	}
-	ns, ok := s.authorizeObservability(w, r, agentName)
+	ns, ok := s.authorizeObservability(w, r, agentName, &sessionID)
 	if !ok {
 		return
 	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusBadRequest,
 				"invalid_request",
 				"request validation failed",
@@ -299,7 +321,7 @@ func (s *Service) GetSpanDetail(w http.ResponseWriter, r *http.Request, agentNam
 	if !ok {
 		return
 	}
-	spanIDBytes, ok := validSpanID(w, r, spanID)
+	spanIDBytes, ok := validHexID(w, r, spanID, "span_id", 8)
 	if !ok {
 		return
 	}
@@ -309,16 +331,17 @@ func (s *Service) GetSpanDetail(w http.ResponseWriter, r *http.Request, agentNam
 		gatewaydb.GatewayGetSpanDetailParams{
 			TenantNamespace: ns,
 			AgentName:       agentName,
+			SessionID:       sessionID,
 			TraceID:         traceIDBytes,
 			SpanID:          spanIDBytes,
 		},
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(
+			apiutil.WriteError(
 				w,
 				r,
-				newAPIError(
+				apiutil.NewError(
 					http.StatusNotFound,
 					"not_found",
 					"span not found",
@@ -327,7 +350,7 @@ func (s *Service) GetSpanDetail(w http.ResponseWriter, r *http.Request, agentNam
 			)
 			return
 		}
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -341,7 +364,7 @@ func (s *Service) GetSpanDetail(w http.ResponseWriter, r *http.Request, agentNam
 		return
 	}
 
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.SpanDetailResponse{
@@ -357,7 +380,7 @@ func (s *Service) GetMCPGraph(w http.ResponseWriter, r *http.Request, agentName 
 	if !ok {
 		return
 	}
-	ns, ok := s.authorizeObservability(w, r, agentName)
+	ns, ok := s.authorizeObservability(w, r, agentName, nil)
 	if !ok {
 		return
 	}
@@ -369,14 +392,14 @@ func (s *Service) GetMCPGraph(w http.ResponseWriter, r *http.Request, agentName 
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 	if !exists {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusNotFound,
 				"not_found",
 				"agent not found",
@@ -389,10 +412,10 @@ func (s *Service) GetMCPGraph(w http.ResponseWriter, r *http.Request, agentName 
 	startTime := params.From.UTC()
 	endTime := params.To.Time.UTC().Add(24 * time.Hour)
 	if !startTime.Before(endTime) {
-		writeError(
+		apiutil.WriteError(
 			w,
 			r,
-			newAPIError(
+			apiutil.NewError(
 				http.StatusBadRequest,
 				"invalid_request",
 				"from must be before or equal to to",
@@ -412,14 +435,14 @@ func (s *Service) GetMCPGraph(w http.ResponseWriter, r *http.Request, agentName 
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
 	agentID := mcpGraphAgentNodePrefix + agentName
 	connectionURLs, err := s.mcpConnectionURLsByName(ns, rows)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 	connections := make([]gatewayapi.MCPGraphConnection, 0, len(rows))
@@ -481,7 +504,7 @@ func (s *Service) GetMCPGraph(w http.ResponseWriter, r *http.Request, agentName 
 		edges = append(edges, edge)
 	}
 
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.MCPGraphResponse{
@@ -560,12 +583,12 @@ func (s *Service) ListProcessObservability(w http.ResponseWriter, r *http.Reques
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
 	items, next := eventPage(rows, req.limit, processEvent, processCursor)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListProcessObservabilityResponse{
@@ -610,7 +633,7 @@ func (s *Service) ListProcessObservabilitySummary(w http.ResponseWriter, r *http
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -622,7 +645,7 @@ func (s *Service) ListProcessObservabilitySummary(w http.ResponseWriter, r *http
 			return aggregatedEventPageCursor{LastSeen: row.LastSeen}
 		},
 	)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListProcessObservabilitySummaryResponse{
@@ -669,12 +692,12 @@ func (s *Service) ListFileObservability(w http.ResponseWriter, r *http.Request, 
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
 	items, next := eventPage(rows, req.limit, fileEvent, fileCursor)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListFileObservabilityResponse{
@@ -719,7 +742,7 @@ func (s *Service) ListFileObservabilitySummary(w http.ResponseWriter, r *http.Re
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -731,7 +754,7 @@ func (s *Service) ListFileObservabilitySummary(w http.ResponseWriter, r *http.Re
 			return aggregatedEventPageCursor{LastSeen: row.LastSeen}
 		},
 	)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListFileObservabilitySummaryResponse{
@@ -778,12 +801,12 @@ func (s *Service) ListNetworkObservability(w http.ResponseWriter, r *http.Reques
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
 	items, next := eventPage(rows, req.limit, networkEvent, networkCursor)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListNetworkObservabilityResponse{
@@ -828,7 +851,7 @@ func (s *Service) ListNetworkObservabilitySummary(w http.ResponseWriter, r *http
 		},
 	)
 	if err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return
 	}
 
@@ -840,7 +863,7 @@ func (s *Service) ListNetworkObservabilitySummary(w http.ResponseWriter, r *http
 			return aggregatedEventPageCursor{LastSeen: row.LastSeen}
 		},
 	)
-	writeJSON(
+	apiutil.WriteJSON(
 		w,
 		http.StatusOK,
 		gatewayapi.ListNetworkObservabilitySummaryResponse{
@@ -964,7 +987,7 @@ func jsonBytes(w http.ResponseWriter, r *http.Request, raw []byte, out any) bool
 		raw = []byte("[]")
 	}
 	if err := json.Unmarshal(raw, out); err != nil {
-		writeInternalError(w, r, err)
+		apiutil.WriteInternalError(w, r, err)
 		return false
 	}
 	return true
