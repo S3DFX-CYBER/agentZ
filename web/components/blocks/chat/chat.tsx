@@ -866,36 +866,6 @@ function ChatInner({
     },
     createSession
   )
-  const activeSteers = queue.filter(
-    (item) =>
-      item.delivery === "steer" &&
-      !item.error &&
-      (item.state === "queued" || item.state === "sending")
-  )
-  const pendingInputs = [
-    ...pendingMessages
-      .filter(({ input }) => input.delivery === "steer")
-      .map(({ id, input, status }) => ({
-        id,
-        text: input.text,
-        files: input.files,
-        status,
-        author: authSession?.user.name,
-      })),
-    ...activeSteers
-      .filter(
-        (item) =>
-          !pendingMessages.some((pending) => pending.id === item.id) &&
-          !messages.some((message) => message.id === item.message_id)
-      )
-      .map((item) => ({
-        id: item.id,
-        text: item.content.text,
-        files: item.content.attachments,
-        status: isBusy ? "Waiting for the current step..." : "Starting agent...",
-        author: item.author.name,
-      })),
-  ]
 
   useEffect(() => {
     if (models.length === 0 || !modelStorageReady) return
@@ -1187,6 +1157,56 @@ function ChatInner({
       }),
     [isBusy, messages, partsByMessage, session?.revert?.messageID, sessionStatus?.type, textByPart]
   )
+  // SSE can render a prompt before either its submission or queue response.
+  // Reconcile against visible rows so a header arriving before its parts does
+  // not remove the pending bubble before the server bubble can replace it.
+  const renderedInputs = new Set<string>()
+  for (const { id } of [...pendingMessages, ...queue]) {
+    const messageID = queue.find((item) => item.id === id)?.message_id
+    if (
+      rows.some(
+        (row) =>
+          row.type === "user" &&
+          (row.messageID === messageID ||
+            partsByMessage[row.messageID]?.some(
+              (part) => part.type === "text" && part.metadata?.["agentz.dev/input-id"] === id
+            ))
+      )
+    ) {
+      renderedInputs.add(id)
+    }
+  }
+  const submissions = pendingMessages.filter((item) => !renderedInputs.has(item.id))
+  const inputs = queue.filter(
+    (item) => item.state === "failed" || item.state === "recovered" || !renderedInputs.has(item.id)
+  )
+  const activeSteers = inputs.filter(
+    (item) =>
+      item.delivery === "steer" &&
+      !item.error &&
+      (item.state === "queued" || item.state === "sending")
+  )
+  const pendingInputs = [
+    ...submissions
+      .filter(({ input }) => input.delivery === "steer")
+      .map(({ id, input, status }) => ({
+        id,
+        text: input.text,
+        files: input.files,
+        status,
+        author: authSession?.user.name,
+      })),
+    ...activeSteers
+      .filter((item) => !submissions.some((pending) => pending.id === item.id))
+      .map((item) => ({
+        id: item.id,
+        text: item.content.text,
+        files: item.content.attachments,
+        status: isBusy ? "Waiting for the current step..." : "Starting agent...",
+        author: item.author.name,
+      })),
+  ]
+
   const actorUserIDs = useMemo(
     () =>
       [
@@ -1456,8 +1476,8 @@ function ChatInner({
             />
           ) : null}
           <ChatQueue
-            items={queue.filter((item) => !activeSteers.includes(item))}
-            submissions={pendingMessages.filter(({ input }) => input.delivery === "queue")}
+            items={inputs.filter((item) => !activeSteers.includes(item))}
+            submissions={submissions.filter(({ input }) => input.delivery === "queue")}
             error={queueError}
             userID={authSession?.user.id}
             coding={coding}
@@ -2081,8 +2101,6 @@ function TimelineRowView({
 
   switch (row.type) {
     case "user": {
-      const isEmpty = row.text.length === 0 && row.attachments.length === 0
-      if (isEmpty) return null
       const profile = row.actor?.type === "user" ? actorProfiles.get(row.actor.id) : undefined
       const name = profile?.name ?? row.actor?.name
       const label = row.actor

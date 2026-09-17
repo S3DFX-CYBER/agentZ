@@ -838,7 +838,10 @@ func (s *Service) deliverChatInput(ctx context.Context, row gatewaydb.ChatInput)
 		synthetic := true
 		text := gatewayapi.OpencodeTextPartInput{
 			Type: gatewayapi.OpencodeTextPartInputTypeText, Synthetic: &synthetic,
-			Metadata: &map[string]any{"agentz_attachment": file},
+			Metadata: &map[string]any{
+				"agentz_attachment":   file,
+				"agentz.dev/input-id": row.ID.String(),
+			},
 			Text: fmt.Sprintf(
 				`<attached_file>
 path: %s
@@ -858,9 +861,12 @@ Use analyze_file when you need the contents of this file.
 		body.Parts = append(body.Parts, part)
 	}
 	var part gatewayapi.OpencodePromptPartInput
+	// The browser reconciles local submissions with SSE before queue polling
+	// catches up. Every text part carries the input ID, including attachments.
 	text := gatewayapi.OpencodeTextPartInput{
-		Type: gatewayapi.OpencodeTextPartInputTypeText,
-		Text: strings.TrimSpace(content.Text),
+		Type:     gatewayapi.OpencodeTextPartInputTypeText,
+		Text:     strings.TrimSpace(content.Text),
+		Metadata: &map[string]any{"agentz.dev/input-id": row.ID.String()},
 	}
 	if err := part.FromOpencodeTextPartInput(text); err != nil {
 		return err

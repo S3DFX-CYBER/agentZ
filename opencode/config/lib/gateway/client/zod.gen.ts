@@ -2548,6 +2548,9 @@ export const zPrepareCodingCheckoutRequest = z.object({
   base_ref: z.string().min(1).max(1024).optional(),
 })
 
+/**
+ * Generate source-control text using the explicit request model, otherwise the sandbox small model, otherwise the thread model. A configured model that fails does not fall back to another model.
+ */
 export const zCodingTextRequest = z.object({
   purpose: z.enum(["branch", "commit", "pr"]),
   text: z.string().max(48000).optional(),
@@ -3196,7 +3199,7 @@ export const zDeleteCodingProjectPath = z.object({
 })
 
 /**
- * Project
+ * Project, conversations, and all managed checkout files deleted.
  */
 export const zDeleteCodingProjectResponse = z.void()
 
