@@ -25,6 +25,13 @@ spec:
     - host: {{ .host }}
       http:
         paths:
+          - path: /api/github
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "agentz.webFullname" $ }}
+                port:
+                  number: {{ $.Values.web.service.port }}
           - path: /api/auth
             pathType: Prefix
             backend:
