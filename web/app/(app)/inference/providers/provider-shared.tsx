@@ -8,8 +8,6 @@ import {
   AnthropicLight,
   Cloudflare,
   Gemini,
-  GitHubCopilotDark,
-  GitHubCopilotLight,
   GoogleCloud,
   Meta,
   MicrosoftAzure,
@@ -27,7 +25,6 @@ export const providerKindLabels: Record<InferenceProviderKind, string> = {
   OpenAICodex: "OpenAI Codex",
   Anthropic: "Anthropic",
   Gemini: "Google Gemini",
-  GitHubCopilot: "GitHub Copilot",
   OpenAICompatible: "OpenAI-compatible",
   AnthropicCompatible: "Anthropic-compatible",
   Bedrock: "Amazon Bedrock",
@@ -57,19 +54,6 @@ export function ProviderIcon({
       <>
         <OpenAILight aria-hidden className={`${className} dark:hidden`} />
         <OpenAIDark aria-hidden className={`hidden ${className} dark:block`} />
-      </>
-    )
-  }
-  if (provider === "github-copilot") {
-    return inverted ? (
-      <>
-        <GitHubCopilotDark aria-hidden className={`${className} dark:hidden`} />
-        <GitHubCopilotLight aria-hidden className={`hidden ${className} dark:block`} />
-      </>
-    ) : (
-      <>
-        <GitHubCopilotLight aria-hidden className={`${className} dark:hidden`} />
-        <GitHubCopilotDark aria-hidden className={`hidden ${className} dark:block`} />
       </>
     )
   }

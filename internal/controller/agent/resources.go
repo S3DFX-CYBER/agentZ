@@ -684,14 +684,6 @@ func (r *Reconciler) agentEnv(agt *agentzv1alpha1.Agent, envCfg sandboxConfig, m
 			Name:  "AGENTZ_OPENAI_CODEX_POOL_IDS",
 			Value: strings.Join(envCfg.OpenAICodexPoolIDs, ","),
 		},
-		corev1.EnvVar{
-			Name:  "AGENTZ_GITHUB_COPILOT_PROVIDER_IDS",
-			Value: strings.Join(envCfg.GitHubCopilotProviderIDs, ","),
-		},
-		corev1.EnvVar{
-			Name:  "AGENTZ_GITHUB_COPILOT_POOL_IDS",
-			Value: strings.Join(envCfg.GitHubCopilotPoolIDs, ","),
-		},
 	)
 
 	forcedNames := make(map[string]struct{}, len(forced))

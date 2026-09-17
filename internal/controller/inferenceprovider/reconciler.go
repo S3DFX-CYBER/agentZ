@@ -480,9 +480,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, provider *agentzv1alpha1.
 
 			credentialsReady := reconcileErr == nil && runtime.ExternalSecret == nil
 			credentialsMessage := "Authentication is not required"
-			isCodex := current.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-			isCopilot := current.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-			if isCodex || isCopilot {
+			if current.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 				credentialsMessage = "Subscription is connected"
 			}
 			if reconcileErr != nil {

@@ -166,8 +166,7 @@ func ValidateProvider(spec agentzv1alpha1.InferenceProviderSpec) []Issue {
 	if spec.AnthropicCompatible != nil {
 		arms++
 	}
-	isSubscription := spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex ||
-		spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
+	isSubscription := spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
 	expectedArms := 1
 	if isSubscription {
 		expectedArms = 0
@@ -190,16 +189,6 @@ func ValidateProvider(spec agentzv1alpha1.InferenceProviderSpec) []Issue {
 				Issue{
 					Field:   "catalog_provider",
 					Message: "openai codex requires the openai catalog",
-				},
-			)
-		}
-	case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-		if spec.CatalogProvider != "github-copilot" {
-			issues = append(
-				issues,
-				Issue{
-					Field:   "catalog_provider",
-					Message: "github copilot requires the github-copilot catalog",
 				},
 			)
 		}
@@ -834,8 +823,7 @@ func CredentialsForUpdate(spec agentzv1alpha1.InferenceProviderSpec, values Cred
 		strings.TrimSpace(values.ClientSecret) != ""
 
 	switch spec.Kind {
-	case agentzv1alpha1.InferenceProviderKindOpenAICodex,
-		agentzv1alpha1.InferenceProviderKindGitHubCopilot:
+	case agentzv1alpha1.InferenceProviderKindOpenAICodex:
 		if hasAPIKey || hasBearerToken || hasServiceAccount || hasAWS || hasAzure {
 			return nil, false, &InputError{
 				Field:   "credentials",

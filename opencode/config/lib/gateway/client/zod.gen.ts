@@ -1514,7 +1514,6 @@ export const zInferenceProviderKind = z.enum([
   "OpenAICodex",
   "Anthropic",
   "Gemini",
-  "GitHubCopilot",
   "OpenAICompatible",
   "AnthropicCompatible",
   "Bedrock",
@@ -1652,7 +1651,7 @@ export const zInferenceProviderOAuthCredentials = z.object({
 })
 
 export const zCreateInferenceProviderOAuthTicketRequest = z.object({
-  kind: z.enum(["OpenAICodex", "GitHubCopilot"]),
+  kind: z.enum(["OpenAICodex"]),
 })
 
 export const zInferenceProviderReadFields = z.object({
@@ -1690,13 +1689,6 @@ export const zGeminiInferenceProviderWrite = z.object({
   models: z.array(zInferenceModel).min(1).max(500),
   kind: z.enum(["Gemini"]),
   gemini: zGeminiProviderConfig,
-})
-
-export const zGitHubCopilotInferenceProviderWrite = z.object({
-  catalog_provider: z.enum(["github-copilot"]),
-  display_name: z.string().min(1).max(128),
-  models: z.array(zInferenceModel).min(1).max(500),
-  kind: z.enum(["GitHubCopilot"]),
 })
 
 export const zVertexAiInferenceProviderWrite = z.object({
@@ -1744,7 +1736,6 @@ export const zInferenceProviderWriteDiscriminator = z.discriminatedUnion("kind",
   zOpenAiCodexInferenceProviderWrite.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderWrite.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderWrite.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderWrite.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderWrite.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderWrite.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderWrite.extend({ kind: z.literal("Azure") }),
@@ -1769,10 +1760,6 @@ export const zAnthropicInferenceProviderRead = z.object({
 export const zGeminiInferenceProviderRead = z.object({
   kind: z.enum(["Gemini"]),
   gemini: zGeminiProviderConfig,
-})
-
-export const zGitHubCopilotInferenceProviderRead = z.object({
-  kind: z.enum(["GitHubCopilot"]),
 })
 
 export const zVertexAiInferenceProviderRead = z.object({
@@ -1805,7 +1792,6 @@ export const zInferenceProviderReadDiscriminator = z.discriminatedUnion("kind", 
   zOpenAiCodexInferenceProviderRead.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderRead.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderRead.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderRead.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderRead.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderRead.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderRead.extend({ kind: z.literal("Azure") }),
@@ -2804,7 +2790,7 @@ export const zWorkflowRunInputsWritable = zJsonValueWritable
 export const zJsonObjectWritable = z.record(z.string(), zJsonValueWritable)
 
 export const zCreateInferenceProviderOAuthTicketRequestWritable = z.object({
-  kind: z.enum(["OpenAICodex", "GitHubCopilot"]),
+  kind: z.enum(["OpenAICodex"]),
   credentials: zInferenceProviderOAuthCredentials,
 })
 
@@ -2885,7 +2871,6 @@ export const zInferenceProviderWriteDiscriminatorWritable = z.discriminatedUnion
   zOpenAiCodexInferenceProviderWrite.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderWriteWritable.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderWriteWritable.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderWrite.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderWriteWritable.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderWriteWritable.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderWriteWritable.extend({ kind: z.literal("Azure") }),

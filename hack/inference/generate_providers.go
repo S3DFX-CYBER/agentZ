@@ -49,8 +49,9 @@ type entry struct {
 }
 
 var excluded = map[string]string{
-	"gitlab":      "GitLab Duo uses a provider-specific agentic protocol",
-	"sap-ai-core": "SAP AI Core requires service-key token and deployment discovery",
+	"github-copilot": "GitHub Copilot subscriptions are unsupported",
+	"gitlab":         "GitLab Duo uses a provider-specific agentic protocol",
+	"sap-ai-core":    "SAP AI Core requires service-key token and deployment discovery",
 }
 
 var npmKinds = map[string]string{
@@ -88,7 +89,6 @@ var providerKinds = map[string]string{
 	"google":                   "Gemini",
 	"google-vertex":            "VertexAI",
 	"google-vertex-anthropic":  "VertexAI",
-	"github-copilot":           "GitHubCopilot",
 	"openai":                   "OpenAI",
 }
 
@@ -198,8 +198,8 @@ func main() {
 			})
 		}
 	}
-	if supported != 157 {
-		log.Fatalf("catalog has %d supported providers, want 157", supported)
+	if supported != 156 {
+		log.Fatalf("catalog has %d supported providers, want 156", supported)
 	}
 	slices.SortFunc(entries, func(a, b entry) int {
 		if order := strings.Compare(a.Name, b.Name); order != 0 {

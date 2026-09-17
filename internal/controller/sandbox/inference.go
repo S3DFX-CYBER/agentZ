@@ -126,8 +126,7 @@ func (r *Reconciler) reconcileInference(ctx context.Context, sandbox *agentzv1al
 				Path:             inference.SandboxProviderPath(sandbox.Name, provider.Name),
 				Models:           models[providerKey],
 				Labels:           map[string]string{inference.ProviderLabel: provider.Name},
-				ExtAuth: kind == agentzv1alpha1.InferenceProviderKindOpenAICodex ||
-					kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot,
+				ExtAuth:          kind == agentzv1alpha1.InferenceProviderKindOpenAICodex,
 			},
 		)
 	}
@@ -442,9 +441,7 @@ func (r *Reconciler) reconcileInferenceGateway(ctx context.Context, namespace st
 			return fmt.Errorf("get inference policy provider: %w", err)
 		}
 		kind := provider.Spec.Kind
-		isCodex := kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if (isCodex || isCopilot) && provider.Namespace != namespace {
+		if kind == agentzv1alpha1.InferenceProviderKindOpenAICodex && provider.Namespace != namespace {
 			extAuthNamespaces = append(extAuthNamespaces, provider.Namespace)
 		}
 		target, err := inference.RenderProviderTarget(provider, "")

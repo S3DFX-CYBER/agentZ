@@ -1379,7 +1379,6 @@ export type InferenceProviderKind =
   | "OpenAICodex"
   | "Anthropic"
   | "Gemini"
-  | "GitHubCopilot"
   | "OpenAICompatible"
   | "AnthropicCompatible"
   | "Bedrock"
@@ -1495,7 +1494,7 @@ export type InferenceProviderOAuthCredentials = {
 }
 
 export type CreateInferenceProviderOAuthTicketRequest = {
-  kind: "OpenAICodex" | "GitHubCopilot"
+  kind: "OpenAICodex"
 }
 
 export type CreateInferenceProviderOAuthTicketResponse = {
@@ -1540,13 +1539,6 @@ export type GeminiInferenceProviderWrite = {
   models: Array<InferenceModel>
   kind: "Gemini"
   gemini: GeminiProviderConfig
-}
-
-export type GitHubCopilotInferenceProviderWrite = {
-  catalog_provider: "github-copilot"
-  display_name: string
-  models: Array<InferenceModel>
-  kind: "GitHubCopilot"
 }
 
 export type VertexAiInferenceProviderWrite = {
@@ -1603,9 +1595,6 @@ export type InferenceProviderWriteDiscriminator =
       kind: "Gemini"
     } & GeminiInferenceProviderWrite)
   | ({
-      kind: "GitHubCopilot"
-    } & GitHubCopilotInferenceProviderWrite)
-  | ({
       kind: "VertexAI"
     } & VertexAiInferenceProviderWrite)
   | ({
@@ -1638,10 +1627,6 @@ export type AnthropicInferenceProviderRead = {
 export type GeminiInferenceProviderRead = {
   kind: "Gemini"
   gemini: GeminiProviderConfig
-}
-
-export type GitHubCopilotInferenceProviderRead = {
-  kind: "GitHubCopilot"
 }
 
 export type VertexAiInferenceProviderRead = {
@@ -1682,9 +1667,6 @@ export type InferenceProviderReadDiscriminator =
   | ({
       kind: "Gemini"
     } & GeminiInferenceProviderRead)
-  | ({
-      kind: "GitHubCopilot"
-    } & GitHubCopilotInferenceProviderRead)
   | ({
       kind: "VertexAI"
     } & VertexAiInferenceProviderRead)
@@ -2502,7 +2484,7 @@ export type JsonObjectWritable = {
 }
 
 export type CreateInferenceProviderOAuthTicketRequestWritable = {
-  kind: "OpenAICodex" | "GitHubCopilot"
+  kind: "OpenAICodex"
   credentials: InferenceProviderOAuthCredentials
 }
 
@@ -2591,9 +2573,6 @@ export type InferenceProviderWriteDiscriminatorWritable =
   | ({
       kind: "Gemini"
     } & GeminiInferenceProviderWriteWritable)
-  | ({
-      kind: "GitHubCopilot"
-    } & GitHubCopilotInferenceProviderWrite)
   | ({
       kind: "VertexAI"
     } & VertexAiInferenceProviderWriteWritable)

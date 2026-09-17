@@ -40,10 +40,6 @@ const (
 	OpenAICodexTokenEndpoint = "https://auth.openai.com/oauth/token"
 	// OpenAICodexModelsEndpoint serves the authenticated Codex model catalog.
 	OpenAICodexModelsEndpoint = "https://chatgpt.com/backend-api/codex/models"
-	// GitHubCopilotAPIEndpoint serves GitHub.com Copilot inference requests.
-	GitHubCopilotAPIEndpoint = "https://api.githubcopilot.com"
-	// GitHubCopilotAPIVersion is the API version used by the pinned OpenCode runtime.
-	GitHubCopilotAPIVersion = "2026-06-01"
 
 	secretAuthorization = "Authorization"
 	secretCredentials   = "credentials.json"
@@ -57,9 +53,7 @@ var chatTextContent agentgatewayv1alpha1.CELExpression
 // CredentialPath returns the OpenBao path for one provider's credential kind.
 func CredentialPath(namespace, name string, kind agentzv1alpha1.InferenceProviderKind) string {
 	dir := credentialPathDir
-	isSubscription := kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-	isSubscription = isSubscription || kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-	if isSubscription {
+	if kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 		dir = SubscriptionCredentialPathDir
 	}
 	return namespace + "/" + dir + "/" + name
@@ -139,8 +133,8 @@ func RefreshSubscription(ctx context.Context, client *http.Client, record Subscr
 	return record, true, nil
 }
 
-// Runtime contains the concrete resources for one provider. ExternalSecret is
-// nil only for an explicitly unauthenticated OpenAI-compatible provider.
+// Runtime contains the resources needed to route and authenticate a provider.
+// ExternalSecret is nil for subscription or unauthenticated providers.
 type Runtime struct {
 	ExternalSecret *externalsecretsv1.ExternalSecret
 	Backend        *agentgatewayv1alpha1.AgentgatewayBackend
@@ -199,9 +193,7 @@ func RenderRuntime(provider *agentzv1alpha1.InferenceProvider, storeName string,
 	}
 	if len(target.secretKeys) == 0 {
 		runtime := Runtime{Backend: backend, SecretKeys: []string{}}
-		isSubscription := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isSubscription = isSubscription || provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if isSubscription {
+		if provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 			runtime.AuthPolicy = RenderInferenceAuthPolicy(
 				provider.Namespace,
 				provider.Name,
@@ -413,28 +405,6 @@ func RenderProviderTarget(provider *agentzv1alpha1.InferenceProvider, model stri
 		}
 		if target.LLM.PathPrefix == "" {
 			target.LLM.PathPrefix = "/"
-		}
-	case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-		target.LLM.Custom = &agentgatewayv1alpha1.CustomProvider{
-			CustomProviderSettings: agentgatewayv1alpha1.CustomProviderSettings{
-				Formats: []agentgatewayv1alpha1.ProviderFormatConfig{
-					{Type: agentgatewayv1alpha1.ProviderFormatCompletions, Path: "/chat/completions"},
-					{Type: agentgatewayv1alpha1.ProviderFormatResponses, Path: "/responses"},
-					{Type: agentgatewayv1alpha1.ProviderFormatMessages, Path: "/v1/messages"},
-				},
-			},
-			Model: modelRef,
-		}
-		err := applyEndpoint(
-			&target.LLM,
-			target.Policies,
-			GitHubCopilotAPIEndpoint,
-			"",
-			"",
-			false,
-		)
-		if err != nil {
-			return ProviderTarget{}, err
 		}
 	case agentzv1alpha1.InferenceProviderKindVertexAI:
 		if modelRef != nil {

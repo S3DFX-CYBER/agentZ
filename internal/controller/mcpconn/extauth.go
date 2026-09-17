@@ -149,9 +149,7 @@ func (r *ExtAuthRuntimeReconciler) runtimeNeeded(ctx context.Context, ns string)
 		if !provider.DeletionTimestamp.IsZero() {
 			continue
 		}
-		isCodex := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if isCodex || isCopilot {
+		if provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 			return true, nil
 		}
 	}
@@ -246,9 +244,7 @@ func (r *ExtAuthRuntimeReconciler) workspaceAccess(ctx context.Context, ns *core
 	subscriptions := make(map[string]struct{}, len(providers.Items))
 	for i := range providers.Items {
 		provider := &providers.Items[i]
-		isCodex := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if isCodex || isCopilot {
+		if provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 			subscriptions[provider.Name] = struct{}{}
 		}
 	}

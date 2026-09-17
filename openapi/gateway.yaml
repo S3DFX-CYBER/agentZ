@@ -2202,7 +2202,6 @@ components:
         kind:
           enum:
           - OpenAICodex
-          - GitHubCopilot
           type: string
       required:
       - kind
@@ -3401,42 +3400,6 @@ components:
           maxLength: 2048
           type: string
       type: object
-    GitHubCopilotInferenceProviderRead:
-      properties:
-        kind:
-          enum:
-          - GitHubCopilot
-          type: string
-      required:
-      - kind
-      type: object
-    GitHubCopilotInferenceProviderWrite:
-      additionalProperties: false
-      properties:
-        catalog_provider:
-          enum:
-          - github-copilot
-          type: string
-        display_name:
-          maxLength: 128
-          minLength: 1
-          type: string
-        kind:
-          enum:
-          - GitHubCopilot
-          type: string
-        models:
-          items:
-            $ref: '#/components/schemas/InferenceModel'
-          maxItems: 500
-          minItems: 1
-          type: array
-      required:
-      - catalog_provider
-      - display_name
-      - models
-      - kind
-      type: object
     ImmutableSkillImportPreviewItem:
       additionalProperties: false
       properties:
@@ -4025,7 +3988,6 @@ components:
       - OpenAICodex
       - Anthropic
       - Gemini
-      - GitHubCopilot
       - OpenAICompatible
       - AnthropicCompatible
       - Bedrock
@@ -4074,7 +4036,6 @@ components:
           Azure: '#/components/schemas/AzureInferenceProviderRead'
           Bedrock: '#/components/schemas/BedrockInferenceProviderRead'
           Gemini: '#/components/schemas/GeminiInferenceProviderRead'
-          GitHubCopilot: '#/components/schemas/GitHubCopilotInferenceProviderRead'
           OpenAI: '#/components/schemas/OpenAIInferenceProviderRead'
           OpenAICodex: '#/components/schemas/OpenAICodexInferenceProviderRead'
           OpenAICompatible: '#/components/schemas/OpenAICompatibleInferenceProviderRead'
@@ -4085,7 +4046,6 @@ components:
       - $ref: '#/components/schemas/OpenAICodexInferenceProviderRead'
       - $ref: '#/components/schemas/AnthropicInferenceProviderRead'
       - $ref: '#/components/schemas/GeminiInferenceProviderRead'
-      - $ref: '#/components/schemas/GitHubCopilotInferenceProviderRead'
       - $ref: '#/components/schemas/VertexAIInferenceProviderRead'
       - $ref: '#/components/schemas/BedrockInferenceProviderRead'
       - $ref: '#/components/schemas/AzureInferenceProviderRead'
@@ -4147,7 +4107,6 @@ components:
           Azure: '#/components/schemas/AzureInferenceProviderWrite'
           Bedrock: '#/components/schemas/BedrockInferenceProviderWrite'
           Gemini: '#/components/schemas/GeminiInferenceProviderWrite'
-          GitHubCopilot: '#/components/schemas/GitHubCopilotInferenceProviderWrite'
           OpenAI: '#/components/schemas/OpenAIInferenceProviderWrite'
           OpenAICodex: '#/components/schemas/OpenAICodexInferenceProviderWrite'
           OpenAICompatible: '#/components/schemas/OpenAICompatibleInferenceProviderWrite'
@@ -4158,7 +4117,6 @@ components:
       - $ref: '#/components/schemas/OpenAICodexInferenceProviderWrite'
       - $ref: '#/components/schemas/AnthropicInferenceProviderWrite'
       - $ref: '#/components/schemas/GeminiInferenceProviderWrite'
-      - $ref: '#/components/schemas/GitHubCopilotInferenceProviderWrite'
       - $ref: '#/components/schemas/VertexAIInferenceProviderWrite'
       - $ref: '#/components/schemas/BedrockInferenceProviderWrite'
       - $ref: '#/components/schemas/AzureInferenceProviderWrite'

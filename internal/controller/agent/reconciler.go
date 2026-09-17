@@ -288,23 +288,21 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 type sandboxConfig struct {
-	WorkspaceType            agentzv1alpha1.WorkspaceType
-	Packages                 []string
-	AllowedHosts             []string
-	Model                    string
-	SmallModel               string
-	AttachmentModel          string
-	Providers                map[string]*opencodeProviderFile
-	OpenAICodexProviderIDs   []string
-	OpenAICodexPoolIDs       []string
-	GitHubCopilotProviderIDs []string
-	GitHubCopilotPoolIDs     []string
-	InferenceURL             string
-	MCPURL                   string
-	SandboxNamespace         string
-	MCPConsentPermissionIDs  []string
-	MCPRefs                  []mcpRefConfig
-	Skills                   []skillpkg.ManifestSkill
+	WorkspaceType           agentzv1alpha1.WorkspaceType
+	Packages                []string
+	AllowedHosts            []string
+	Model                   string
+	SmallModel              string
+	AttachmentModel         string
+	Providers               map[string]*opencodeProviderFile
+	OpenAICodexProviderIDs  []string
+	OpenAICodexPoolIDs      []string
+	InferenceURL            string
+	MCPURL                  string
+	SandboxNamespace        string
+	MCPConsentPermissionIDs []string
+	MCPRefs                 []mcpRefConfig
+	Skills                  []skillpkg.ManifestSkill
 }
 
 type mcpRefConfig struct {
@@ -319,19 +317,17 @@ type mcpToolConfig struct {
 
 func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Agent) (sandboxConfig, error) {
 	cfg := sandboxConfig{
-		Packages:                 []string{},
-		AllowedHosts:             []string{},
-		Providers:                map[string]*opencodeProviderFile{},
-		OpenAICodexProviderIDs:   []string{},
-		OpenAICodexPoolIDs:       []string{},
-		GitHubCopilotProviderIDs: []string{},
-		GitHubCopilotPoolIDs:     []string{},
-		InferenceURL:             "",
-		MCPURL:                   "",
-		SandboxNamespace:         "",
-		MCPConsentPermissionIDs:  []string{},
-		MCPRefs:                  []mcpRefConfig{},
-		Skills:                   []skillpkg.ManifestSkill{},
+		Packages:                []string{},
+		AllowedHosts:            []string{},
+		Providers:               map[string]*opencodeProviderFile{},
+		OpenAICodexProviderIDs:  []string{},
+		OpenAICodexPoolIDs:      []string{},
+		InferenceURL:            "",
+		MCPURL:                  "",
+		SandboxNamespace:        "",
+		MCPConsentPermissionIDs: []string{},
+		MCPRefs:                 []mcpRefConfig{},
+		Skills:                  []skillpkg.ManifestSkill{},
 	}
 	var workspace agentzv1alpha1.Workspace
 	err := r.Get(ctx, client.ObjectKey{Name: agt.Namespace}, &workspace)
@@ -477,11 +473,11 @@ func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Age
 						err,
 					)
 				}
-				switch memberProvider.Spec.Kind {
-				case agentzv1alpha1.InferenceProviderKindOpenAICodex:
-					cfg.OpenAICodexPoolIDs = append(cfg.OpenAICodexPoolIDs, pool.Name)
-				case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-					cfg.GitHubCopilotPoolIDs = append(cfg.GitHubCopilotPoolIDs, pool.Name)
+				if memberProvider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
+					cfg.OpenAICodexPoolIDs = append(
+						cfg.OpenAICodexPoolIDs,
+						modelRef.Provider+"/"+pool.Name,
+					)
 				}
 			}
 			continue
@@ -508,15 +504,9 @@ func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Age
 				return sandboxConfig{}, fmt.Errorf("get inference provider %q: %w", modelRef.Provider, err)
 			}
 			providers[providerKey] = provider
-			switch provider.Spec.Kind {
-			case agentzv1alpha1.InferenceProviderKindOpenAICodex:
+			if provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
 				cfg.OpenAICodexProviderIDs = append(
 					cfg.OpenAICodexProviderIDs,
-					modelRef.Provider,
-				)
-			case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-				cfg.GitHubCopilotProviderIDs = append(
-					cfg.GitHubCopilotProviderIDs,
 					modelRef.Provider,
 				)
 			}
@@ -531,8 +521,6 @@ func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Age
 			case agentzv1alpha1.InferenceProviderKindAnthropic,
 				agentzv1alpha1.InferenceProviderKindAnthropicCompatible:
 				npm = "@ai-sdk/anthropic"
-				apiKey = "inference-gateway"
-			case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
 				apiKey = "inference-gateway"
 			}
 			cfg.Providers[modelRef.Provider] = &opencodeProviderFile{
@@ -559,7 +547,7 @@ func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Age
 				modelRef.Model,
 			)
 		}
-		model := opencodeModelFile{
+		cfg.Providers[modelRef.Provider].Models[modelRef.Model] = opencodeModelFile{
 			ID: modelRef.Model, Name: selected.DisplayName,
 			Attachment:  selected.Capabilities.Attachment,
 			Reasoning:   selected.Capabilities.Reasoning,
@@ -574,31 +562,10 @@ func (r *Reconciler) resolveSandbox(ctx context.Context, agt *agentzv1alpha1.Age
 				Output: slices.Clone(selected.Modalities.Output),
 			},
 		}
-		isCodex := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if isCodex || isCopilot {
-			npm := "@ai-sdk/openai-compatible"
-			if selected.API != nil {
-				switch *selected.API {
-				case agentzv1alpha1.InferenceModelAPIResponses:
-					npm = "@ai-sdk/openai"
-				case agentzv1alpha1.InferenceModelAPIMessages:
-					npm = "@ai-sdk/anthropic"
-				}
-			}
-			model.Provider = &opencodeModelProviderFile{
-				NPM: npm,
-				API: cfg.Providers[modelRef.Provider].Options.BaseURL,
-			}
-		}
-		cfg.Providers[modelRef.Provider].Models[modelRef.Model] = model
 	}
 	slices.Sort(cfg.OpenAICodexProviderIDs)
 	slices.Sort(cfg.OpenAICodexPoolIDs)
 	cfg.OpenAICodexPoolIDs = slices.Compact(cfg.OpenAICodexPoolIDs)
-	slices.Sort(cfg.GitHubCopilotProviderIDs)
-	slices.Sort(cfg.GitHubCopilotPoolIDs)
-	cfg.GitHubCopilotPoolIDs = slices.Compact(cfg.GitHubCopilotPoolIDs)
 	cfg.Model = sandbox.Spec.Inference.DefaultModel.Provider + "/" + sandbox.Spec.Inference.DefaultModel.Model
 	if sandbox.Spec.Inference.SmallModel != nil {
 		cfg.SmallModel = sandbox.Spec.Inference.SmallModel.Provider + "/" + sandbox.Spec.Inference.SmallModel.Model

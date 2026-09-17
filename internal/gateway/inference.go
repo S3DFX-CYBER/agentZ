@@ -82,20 +82,6 @@ type providerInput struct {
 	Credentials     inference.CredentialValues
 }
 
-type providerWriter interface {
-	Discriminator() (string, error)
-	AsOpenAIInferenceProviderWrite() (gatewayapi.OpenAIInferenceProviderWrite, error)
-	AsOpenAICodexInferenceProviderWrite() (gatewayapi.OpenAICodexInferenceProviderWrite, error)
-	AsAnthropicInferenceProviderWrite() (gatewayapi.AnthropicInferenceProviderWrite, error)
-	AsGeminiInferenceProviderWrite() (gatewayapi.GeminiInferenceProviderWrite, error)
-	AsGitHubCopilotInferenceProviderWrite() (gatewayapi.GitHubCopilotInferenceProviderWrite, error)
-	AsVertexAIInferenceProviderWrite() (gatewayapi.VertexAIInferenceProviderWrite, error)
-	AsBedrockInferenceProviderWrite() (gatewayapi.BedrockInferenceProviderWrite, error)
-	AsAzureInferenceProviderWrite() (gatewayapi.AzureInferenceProviderWrite, error)
-	AsOpenAICompatibleInferenceProviderWrite() (gatewayapi.OpenAICompatibleInferenceProviderWrite, error)
-	AsAnthropicCompatibleInferenceProviderWrite() (gatewayapi.AnthropicCompatibleInferenceProviderWrite, error)
-}
-
 type providerUsage struct {
 	pools     []string
 	sandboxes []string
@@ -528,9 +514,7 @@ func (s *Service) CreateInferenceProviderOAuthTicket(w http.ResponseWriter, r *h
 		return
 	}
 	kind := agentzv1alpha1.InferenceProviderKind(req.Kind)
-	isCodex := kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-	isCopilot := kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-	if !isCodex && !isCopilot {
+	if kind != agentzv1alpha1.InferenceProviderKindOpenAICodex {
 		writeProviderInputError(
 			w,
 			r,
@@ -540,17 +524,7 @@ func (s *Service) CreateInferenceProviderOAuthTicket(w http.ResponseWriter, r *h
 		)
 		return
 	}
-	if req.Credentials.AccessToken == nil {
-		writeProviderInputError(
-			w,
-			r,
-			&inference.InputError{
-				Field: "credentials.access_token", Message: "field is required",
-			},
-		)
-		return
-	}
-	if strings.TrimSpace(*req.Credentials.AccessToken) == "" {
+	if req.Credentials.AccessToken == nil || strings.TrimSpace(*req.Credentials.AccessToken) == "" {
 		writeProviderInputError(
 			w,
 			r,
@@ -565,7 +539,7 @@ func (s *Service) CreateInferenceProviderOAuthTicket(w http.ResponseWriter, r *h
 	if req.Credentials.RefreshToken != nil {
 		refreshToken = strings.TrimSpace(*req.Credentials.RefreshToken)
 	}
-	if isCodex && refreshToken == "" {
+	if refreshToken == "" {
 		writeProviderInputError(
 			w,
 			r,
@@ -581,7 +555,7 @@ func (s *Service) CreateInferenceProviderOAuthTicket(w http.ResponseWriter, r *h
 	if req.Credentials.ExpiresAt != nil {
 		token.Expiry = req.Credentials.ExpiresAt.UTC()
 	}
-	if isCodex && !token.Expiry.After(time.Now().UTC()) {
+	if !token.Expiry.After(time.Now().UTC()) {
 		writeProviderInputError(
 			w,
 			r,
@@ -593,24 +567,22 @@ func (s *Service) CreateInferenceProviderOAuthTicket(w http.ResponseWriter, r *h
 	}
 	record := inference.SubscriptionRecord{
 		Kind: kind, Token: token, UpdatedAt: time.Now().UTC(),
+		ClientID: inference.OpenAICodexClientID,
 	}
-	if kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
-		record.ClientID = inference.OpenAICodexClientID
-		var idToken string
-		if req.Credentials.IdToken != nil {
-			idToken = *req.Credentials.IdToken
-		}
-		record.AccountID = openAIAccountID(idToken, accessToken)
-		if record.AccountID == "" {
-			writeProviderInputError(
-				w,
-				r,
-				&inference.InputError{
-					Field: "credentials.id_token", Message: "account id claim is required",
-				},
-			)
-			return
-		}
+	var idToken string
+	if req.Credentials.IdToken != nil {
+		idToken = *req.Credentials.IdToken
+	}
+	record.AccountID = openAIAccountID(idToken, accessToken)
+	if record.AccountID == "" {
+		writeProviderInputError(
+			w,
+			r,
+			&inference.InputError{
+				Field: "credentials.id_token", Message: "account id claim is required",
+			},
+		)
+		return
 	}
 	models, provenance, discoveryErr := s.catalog.SubscriptionModels(
 		r.Context(),
@@ -788,8 +760,7 @@ func (s *Service) CreateInferenceProvider(w http.ResponseWriter, r *http.Request
 		writeInferenceIssues(w, r, fields)
 		return
 	}
-	isSubscription := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex ||
-		provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
+	isSubscription := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
 	var record map[string]any
 	var ticketPath string
 	if isSubscription {
@@ -979,9 +950,7 @@ func (s *Service) RefreshInferenceProviderModels(w http.ResponseWriter, r *http.
 	if !ok {
 		return
 	}
-	isCodex := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-	isCopilot := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-	if !isCodex && !isCopilot {
+	if provider.Spec.Kind != agentzv1alpha1.InferenceProviderKindOpenAICodex {
 		writeProviderInputError(
 			w,
 			r,
@@ -1642,7 +1611,7 @@ func (s *Service) providerAndUsage(w http.ResponseWriter, r *http.Request, names
 	return provider, usage, true
 }
 
-func providerInputFromWrite(req providerWriter) (providerInput, error) {
+func providerInputFromWrite(req gatewayapi.InferenceProviderWriteDiscriminator) (providerInput, error) {
 	input := providerInput{}
 	providerKind, err := req.Discriminator()
 	if err != nil {
@@ -1704,17 +1673,6 @@ func providerInputFromWrite(req providerWriter) (providerInput, error) {
 		if value.Credentials.ApiKey != nil {
 			input.Credentials.APIKey = *value.Credentials.ApiKey
 		}
-	case "GitHubCopilot":
-		value, err := req.AsGitHubCopilotInferenceProviderWrite()
-		if err != nil {
-			return input, &inference.InputError{
-				Field: "kind", Message: "github copilot configuration does not match provider kind",
-			}
-		}
-		input.DisplayName = value.DisplayName
-		input.CatalogProvider = string(value.CatalogProvider)
-		input.Kind = gatewayapi.InferenceProviderKindGitHubCopilot
-		input.Models = value.Models
 	case "VertexAI":
 		value, err := req.AsVertexAIInferenceProviderWrite()
 		if err != nil {
@@ -2003,15 +1961,6 @@ func providerToAPI(provider *agentzv1alpha1.InferenceProvider, usage int, access
 		})
 		if err != nil {
 			return out, fmt.Errorf("render Gemini provider response: %w", err)
-		}
-	case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-		err := out.FromGitHubCopilotInferenceProviderRead(
-			gatewayapi.GitHubCopilotInferenceProviderRead{
-				Kind: gatewayapi.GitHubCopilotInferenceProviderReadKindGitHubCopilot,
-			},
-		)
-		if err != nil {
-			return out, fmt.Errorf("render github copilot provider response: %w", err)
 		}
 	case agentzv1alpha1.InferenceProviderKindVertexAI:
 		err := out.FromVertexAIInferenceProviderRead(gatewayapi.VertexAIInferenceProviderRead{

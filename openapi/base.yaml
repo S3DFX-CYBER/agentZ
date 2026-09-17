@@ -8268,7 +8268,7 @@ components:
 
     InferenceProviderKind:
       type: string
-      enum: [OpenAI, OpenAICodex, Anthropic, Gemini, GitHubCopilot, OpenAICompatible, AnthropicCompatible, Bedrock, VertexAI, Azure]
+      enum: [OpenAI, OpenAICodex, Anthropic, Gemini, OpenAICompatible, AnthropicCompatible, Bedrock, VertexAI, Azure]
 
     InferenceModelAPI:
       type: string
@@ -8446,7 +8446,7 @@ components:
       type: object
       additionalProperties: false
       properties:
-        kind: {type: string, enum: [OpenAICodex, GitHubCopilot]}
+        kind: {type: string, enum: [OpenAICodex]}
         credentials: {$ref: '#/components/schemas/InferenceProviderOAuthCredentials'}
       required: [kind, credentials]
 
@@ -8517,15 +8517,6 @@ components:
         gemini: {$ref: '#/components/schemas/GeminiProviderConfig'}
         credentials: {$ref: '#/components/schemas/InferenceProviderAPIKeyCredentials'}
       required: [catalog_provider, display_name, models, kind, gemini, credentials]
-    GitHubCopilotInferenceProviderWrite:
-      type: object
-      additionalProperties: false
-      properties:
-        catalog_provider: {type: string, enum: [github-copilot]}
-        display_name: {type: string, minLength: 1, maxLength: 128}
-        models: {type: array, minItems: 1, maxItems: 500, items: {$ref: '#/components/schemas/InferenceModel'}}
-        kind: {type: string, enum: [GitHubCopilot]}
-      required: [catalog_provider, display_name, models, kind]
     VertexAIInferenceProviderWrite:
       type: object
       additionalProperties: false
@@ -8587,7 +8578,6 @@ components:
       - {$ref: '#/components/schemas/OpenAICodexInferenceProviderWrite'}
       - {$ref: '#/components/schemas/AnthropicInferenceProviderWrite'}
       - {$ref: '#/components/schemas/GeminiInferenceProviderWrite'}
-      - {$ref: '#/components/schemas/GitHubCopilotInferenceProviderWrite'}
       - {$ref: '#/components/schemas/VertexAIInferenceProviderWrite'}
       - {$ref: '#/components/schemas/BedrockInferenceProviderWrite'}
       - {$ref: '#/components/schemas/AzureInferenceProviderWrite'}
@@ -8600,7 +8590,6 @@ components:
           OpenAICodex: '#/components/schemas/OpenAICodexInferenceProviderWrite'
           Anthropic: '#/components/schemas/AnthropicInferenceProviderWrite'
           Gemini: '#/components/schemas/GeminiInferenceProviderWrite'
-          GitHubCopilot: '#/components/schemas/GitHubCopilotInferenceProviderWrite'
           VertexAI: '#/components/schemas/VertexAIInferenceProviderWrite'
           Bedrock: '#/components/schemas/BedrockInferenceProviderWrite'
           Azure: '#/components/schemas/AzureInferenceProviderWrite'
@@ -8633,12 +8622,6 @@ components:
         kind: {type: string, enum: [Gemini]}
         gemini: {$ref: '#/components/schemas/GeminiProviderConfig'}
       required: [kind, gemini]
-
-    GitHubCopilotInferenceProviderRead:
-      type: object
-      properties:
-        kind: {type: string, enum: [GitHubCopilot]}
-      required: [kind]
 
     VertexAIInferenceProviderRead:
       type: object
@@ -8681,7 +8664,6 @@ components:
       - {$ref: '#/components/schemas/OpenAICodexInferenceProviderRead'}
       - {$ref: '#/components/schemas/AnthropicInferenceProviderRead'}
       - {$ref: '#/components/schemas/GeminiInferenceProviderRead'}
-      - {$ref: '#/components/schemas/GitHubCopilotInferenceProviderRead'}
       - {$ref: '#/components/schemas/VertexAIInferenceProviderRead'}
       - {$ref: '#/components/schemas/BedrockInferenceProviderRead'}
       - {$ref: '#/components/schemas/AzureInferenceProviderRead'}
@@ -8694,7 +8676,6 @@ components:
           OpenAICodex: '#/components/schemas/OpenAICodexInferenceProviderRead'
           Anthropic: '#/components/schemas/AnthropicInferenceProviderRead'
           Gemini: '#/components/schemas/GeminiInferenceProviderRead'
-          GitHubCopilot: '#/components/schemas/GitHubCopilotInferenceProviderRead'
           VertexAI: '#/components/schemas/VertexAIInferenceProviderRead'
           Bedrock: '#/components/schemas/BedrockInferenceProviderRead'
           Azure: '#/components/schemas/AzureInferenceProviderRead'

@@ -585,8 +585,6 @@ export type {
   GetWorkspaceErrors,
   GetWorkspaceResponse,
   GetWorkspaceResponses,
-  GitHubCopilotInferenceProviderRead,
-  GitHubCopilotInferenceProviderWrite,
   IdempotencyKeyHeader,
   ImmutableSkillImportPreviewItem,
   ImmutableSkillImportPreviewResponse,

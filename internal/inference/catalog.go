@@ -36,37 +36,24 @@ const (
 )
 
 type catalogProvider struct {
-	ID     string                  `json:"id"`
-	Name   string                  `json:"name"`
 	NPM    string                  `json:"npm"`
-	API    string                  `json:"api"`
-	Doc    string                  `json:"doc"`
 	Models map[string]catalogModel `json:"models"`
 }
 
 type catalogModel struct {
-	ID          string                              `json:"id"`
-	Name        string                              `json:"name"`
-	Attachment  bool                                `json:"attachment"`
-	Reasoning   bool                                `json:"reasoning"`
-	ToolCall    bool                                `json:"tool_call"`
-	Temperature bool                                `json:"temperature"`
-	Modalities  catalogModelModalities              `json:"modalities"`
-	Limit       agentzv1alpha1.InferenceModelLimits `json:"limit"`
-	Provider    *catalogModelProvider               `json:"provider"`
+	ID          string                                  `json:"id"`
+	Name        string                                  `json:"name"`
+	Attachment  bool                                    `json:"attachment"`
+	Reasoning   bool                                    `json:"reasoning"`
+	ToolCall    bool                                    `json:"tool_call"`
+	Temperature bool                                    `json:"temperature"`
+	Modalities  agentzv1alpha1.InferenceModelModalities `json:"modalities"`
+	Limit       agentzv1alpha1.InferenceModelLimits     `json:"limit"`
+	Provider    *catalogModelProvider                   `json:"provider"`
 }
 
 type catalogModelProvider struct {
 	NPM string `json:"npm"`
-}
-
-type catalogModelModalities struct {
-	Input  []agentzv1alpha1.InferenceModelModality `json:"input"`
-	Output []agentzv1alpha1.InferenceModelModality `json:"output"`
-}
-
-type copilotModelsResponse struct {
-	Data []copilotModel `json:"data"`
 }
 
 type codexModelsResponse struct {
@@ -81,44 +68,6 @@ type codexModel struct {
 	ContextWindow    *int32                                  `json:"context_window"`
 	MaxContextWindow *int32                                  `json:"max_context_window"`
 	InputModalities  []agentzv1alpha1.InferenceModelModality `json:"input_modalities"`
-}
-
-type copilotModel struct {
-	ID                 string                   `json:"id"`
-	Name               string                   `json:"name"`
-	SupportedEndpoints []string                 `json:"supported_endpoints"`
-	Policy             *copilotModelPolicy      `json:"policy"`
-	Capabilities       copilotModelCapabilities `json:"capabilities"`
-}
-
-type copilotModelPolicy struct {
-	State string `json:"state"`
-}
-
-type copilotModelCapabilities struct {
-	Family   string               `json:"family"`
-	Limits   *copilotModelLimits  `json:"limits"`
-	Supports copilotModelSupports `json:"supports"`
-}
-
-type copilotModelLimits struct {
-	Context *int32              `json:"max_context_window_tokens"`
-	Output  *int32              `json:"max_output_tokens"`
-	Prompt  *int32              `json:"max_prompt_tokens"`
-	Vision  *copilotModelVision `json:"vision"`
-}
-
-type copilotModelVision struct {
-	MediaTypes []string `json:"supported_media_types"`
-}
-
-type copilotModelSupports struct {
-	AdaptiveThinking  bool     `json:"adaptive_thinking"`
-	MaxThinkingBudget *int32   `json:"max_thinking_budget"`
-	MinThinkingBudget *int32   `json:"min_thinking_budget"`
-	ReasoningEffort   []string `json:"reasoning_effort"`
-	ToolCalls         *bool    `json:"tool_calls"`
-	Vision            bool     `json:"vision"`
 }
 
 // Catalog fetches and retains a parsed Models.dev projection.
@@ -291,17 +240,9 @@ func (c *Catalog) SubscriptionModels(ctx context.Context, record SubscriptionRec
 	if record.Token == nil || strings.TrimSpace(record.Token.AccessToken) == "" {
 		return nil, "", fmt.Errorf("subscription access token is unavailable")
 	}
-	switch record.Kind {
-	case agentzv1alpha1.InferenceProviderKindOpenAICodex:
-		return c.codexModels(ctx, record)
-	case agentzv1alpha1.InferenceProviderKindGitHubCopilot:
-		return c.copilotModels(ctx, record.Token.AccessToken)
-	default:
+	if record.Kind != agentzv1alpha1.InferenceProviderKindOpenAICodex {
 		return nil, "", fmt.Errorf("provider kind %q is not subscription-backed", record.Kind)
 	}
-}
-
-func (c *Catalog) codexModels(ctx context.Context, record SubscriptionRecord) ([]agentzv1alpha1.InferenceModel, CatalogProvenance, error) {
 	if strings.TrimSpace(record.AccountID) == "" {
 		return nil, "", fmt.Errorf("openai codex account id is unavailable")
 	}
@@ -380,139 +321,6 @@ func (c *Catalog) codexModels(ctx context.Context, record SubscriptionRecord) ([
 		return nil, "", fmt.Errorf("openai codex returned no eligible models")
 	}
 	return models, provenance, catalogErr
-}
-
-func (c *Catalog) copilotModels(ctx context.Context, accessToken string) ([]agentzv1alpha1.InferenceModel, CatalogProvenance, error) {
-	baseline, _, catalogErr := c.Suggestions(
-		ctx,
-		"github-copilot",
-		agentzv1alpha1.InferenceProviderKindGitHubCopilot,
-	)
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		GitHubCopilotAPIEndpoint+"/models",
-		nil,
-	)
-	if err != nil {
-		return nil, "", fmt.Errorf("create github copilot models request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("User-Agent", "agentz")
-	req.Header.Set("X-GitHub-Api-Version", GitHubCopilotAPIVersion)
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, "", fmt.Errorf("fetch github copilot models: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, "", fmt.Errorf("fetch github copilot models: upstream returned %s", resp.Status)
-	}
-	payload, err := io.ReadAll(io.LimitReader(resp.Body, modelsDevMaxBytes+1))
-	if err != nil {
-		return nil, "", fmt.Errorf("read github copilot models: %w", err)
-	}
-	if len(payload) > modelsDevMaxBytes {
-		return nil, "", fmt.Errorf("read github copilot models: response exceeds %d bytes", modelsDevMaxBytes)
-	}
-	var response copilotModelsResponse
-	if err := json.Unmarshal(payload, &response); err != nil {
-		return nil, "", fmt.Errorf("decode github copilot models: %w", err)
-	}
-
-	known := make(map[string]agentzv1alpha1.InferenceModel, len(baseline))
-	for _, model := range baseline {
-		known[model.ID] = model
-	}
-	models := make([]agentzv1alpha1.InferenceModel, 0, len(response.Data))
-	for _, remote := range response.Data {
-		if remote.Policy != nil && remote.Policy.State == "disabled" {
-			continue
-		}
-		limits := remote.Capabilities.Limits
-		supports := remote.Capabilities.Supports
-		if limits == nil {
-			continue
-		}
-		missingLimits := limits.Output == nil || limits.Prompt == nil
-		if missingLimits || supports.ToolCalls == nil {
-			continue
-		}
-		api := agentzv1alpha1.InferenceModelAPI("")
-		switch {
-		case slices.Contains(remote.SupportedEndpoints, "/v1/messages"):
-			api = agentzv1alpha1.InferenceModelAPIMessages
-		case slices.Contains(remote.SupportedEndpoints, "/responses"):
-			api = agentzv1alpha1.InferenceModelAPIResponses
-		case slices.Contains(remote.SupportedEndpoints, "/chat/completions"):
-			api = agentzv1alpha1.InferenceModelAPIChatCompletions
-		default:
-			continue
-		}
-		missingIdentity := remote.ID == "" || remote.Name == ""
-		invalidLimits := *limits.Output < 1 || *limits.Prompt < 1
-		if missingIdentity || invalidLimits {
-			continue
-		}
-		contextLimit := *limits.Prompt
-		if limits.Context != nil {
-			contextLimit = *limits.Context
-		}
-		if contextLimit < *limits.Prompt || contextLimit < *limits.Output {
-			continue
-		}
-		image := supports.Vision
-		if limits.Vision != nil {
-			image = image || slices.ContainsFunc(
-				limits.Vision.MediaTypes,
-				func(mediaType string) bool { return strings.HasPrefix(mediaType, "image/") },
-			)
-		}
-		model, ok := known[remote.ID]
-		if !ok {
-			model = agentzv1alpha1.InferenceModel{
-				ID: remote.ID,
-				Capabilities: agentzv1alpha1.InferenceModelCapabilities{
-					Attachment: image, Temperature: true,
-				},
-				Modalities: agentzv1alpha1.InferenceModelModalities{
-					Input:  []agentzv1alpha1.InferenceModelModality{agentzv1alpha1.InferenceModelModalityText},
-					Output: []agentzv1alpha1.InferenceModelModality{agentzv1alpha1.InferenceModelModalityText},
-				},
-			}
-			if image {
-				model.Modalities.Input = append(
-					model.Modalities.Input,
-					agentzv1alpha1.InferenceModelModalityImage,
-				)
-			}
-		}
-		model.DisplayName = remote.Name
-		model.Capabilities.Reasoning = model.Capabilities.Reasoning ||
-			supports.AdaptiveThinking ||
-			len(supports.ReasoningEffort) > 0 ||
-			supports.MaxThinkingBudget != nil ||
-			supports.MinThinkingBudget != nil
-		model.Capabilities.ToolCall = *supports.ToolCalls
-		model.Limits = agentzv1alpha1.InferenceModelLimits{
-			Context: contextLimit,
-			Input:   limits.Prompt,
-			Output:  *limits.Output,
-		}
-		model.API = &api
-		model.Catalog = &agentzv1alpha1.InferenceModelCatalog{Provider: "github-copilot"}
-		models = append(models, model)
-	}
-	if len(models) == 0 {
-		return nil, "", fmt.Errorf("github copilot returned no eligible models")
-	}
-	slices.SortFunc(
-		models,
-		func(a, b agentzv1alpha1.InferenceModel) int {
-			return strings.Compare(a.DisplayName, b.DisplayName)
-		},
-	)
-	return models, CatalogProvenanceLive, catalogErr
 }
 
 func modelsFromCatalog(provider catalogProvider, providerID string, providerKind agentzv1alpha1.InferenceProviderKind) []agentzv1alpha1.InferenceModel {
