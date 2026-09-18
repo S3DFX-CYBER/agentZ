@@ -26,6 +26,7 @@ import {
   Settings2,
   Trash2,
   X,
+  TriangleAlert,
 } from "lucide-react"
 import {
   findMcpServerByURL,
@@ -1157,7 +1158,7 @@ export function McpSheet({
         </SheetHeader>
         {discoveryWarningVisible ? (
           <Alert className="mt-4 px-4" variant="warning">
-            <CircleAlert />
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Auto-discovery failed</AlertTitle>
             <AlertDescription>{discoveryWarningVisible.message}</AlertDescription>
             <AlertAction>
@@ -1453,8 +1454,8 @@ export function McpSheet({
             </Field>
           </FieldGroup>
           {submitError ? (
-            <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4" variant="destructive">
-              <CircleAlert />
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertTitle>Connection failed</AlertTitle>
               <AlertDescription>{submitError}</AlertDescription>
             </Alert>

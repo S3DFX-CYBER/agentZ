@@ -849,11 +849,16 @@ export function CheckoutPicker({
             />
           </CommandList>
           <div className="flex items-center gap-2 border-t p-2 text-xs">
-            <span className="text-muted-foreground min-w-0 flex-1">
-              {refs.error?.message ??
-                snapshot?.error ??
-                `${snapshot?.total_count ?? 0} ${snapshot?.total_count === 1 ? "branch" : "branches"}`}
-            </span>
+            {refs.error || snapshot?.error ? (
+              <Alert variant="destructive" className="flex-1">
+                <CircleAlert aria-hidden="true" />
+                <AlertDescription>{refs.error?.message ?? snapshot?.error}</AlertDescription>
+              </Alert>
+            ) : (
+              <span className="text-muted-foreground min-w-0 flex-1">
+                {snapshot?.total_count ?? 0} {snapshot?.total_count === 1 ? "branch" : "branches"}
+              </span>
+            )}
             <Button
               variant="ghost"
               size="icon-xs"

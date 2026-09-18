@@ -11,6 +11,7 @@ import { listInferencePoolsCachedQuery } from "@/data/inference-pool.queries"
 import { SandboxWizard } from "./wizard"
 import { AdministrationPageHeader, AdministrationState } from "@/components/administration"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CircleAlert } from "lucide-react"
 
 type UpdateSandboxPageProps = {
   basePath: string
@@ -89,6 +90,7 @@ async function UpdateSandboxContent({
   if (sandboxes.error || !sandboxes.sandboxes) {
     return (
       <Alert className="px-4 md:px-6" variant="destructive">
+        <CircleAlert aria-hidden="true" />
         <AlertDescription>{sandboxes.error?.message ?? "Failed to load sandbox"}</AlertDescription>
       </Alert>
     )

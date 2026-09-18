@@ -13,10 +13,11 @@ import {
   Settings,
   Trash2,
   XCircle,
+  CircleAlert,
 } from "lucide-react"
 import type { Agent, AgentStatus, Sandbox, Skill } from "@/lib/gateway/client"
 import { AgentDialog } from "@/app/agent/agent-dialog"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -257,9 +257,10 @@ function DeleteAgentDialog({
           </DialogDescription>
         </DialogHeader>
         {state.error ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{state.error.message}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { FileSpreadsheet } from "lucide-react"
+import { CircleAlert, Info } from "lucide-react"
 import { read, utils, type WorkBook } from "xlsx"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const maxColumns = 50
 const maxRows = 500
@@ -171,9 +172,12 @@ function WorkbookPreview({ workbook }: { workbook: WorkBook }): React.JSX.Elemen
         ) : null}
       </div>
       {limited ? (
-        <p className="text-muted-foreground shrink-0 border-t px-3 py-2 text-xs">
-          Preview limited to {maxSheets} sheets, {maxRows} rows, and {maxColumns} columns.
-        </p>
+        <Alert variant="info" className="shrink-0 px-3 py-2">
+          <Info aria-hidden="true" />
+          <AlertDescription>
+            Preview limited to {maxSheets} sheets, {maxRows} rows, and {maxColumns} columns.
+          </AlertDescription>
+        </Alert>
       ) : null}
     </div>
   )
@@ -181,9 +185,9 @@ function WorkbookPreview({ workbook }: { workbook: WorkBook }): React.JSX.Elemen
 
 function InvalidSpreadsheet(): React.JSX.Element {
   return (
-    <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-sm">
-      <FileSpreadsheet className="size-8" />
-      This spreadsheet could not be rendered
-    </div>
+    <Alert variant="destructive" className="p-6">
+      <CircleAlert aria-hidden="true" />
+      <AlertDescription>This spreadsheet could not be rendered</AlertDescription>
+    </Alert>
   )
 }

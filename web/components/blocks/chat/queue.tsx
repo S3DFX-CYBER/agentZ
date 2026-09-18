@@ -1,12 +1,20 @@
 "use client"
 
 import { useLayoutEffect, useRef, useState } from "react"
-import { ArrowUpIcon, ChevronDownIcon, CornerUpLeftIcon, PaperclipIcon, XIcon } from "lucide-react"
+import {
+  ArrowUpIcon,
+  ChevronDownIcon,
+  CornerUpLeftIcon,
+  PaperclipIcon,
+  XIcon,
+  CircleAlert,
+} from "lucide-react"
 import type { ChatInput, ChatInputUpdate } from "@/lib/gateway/client"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import type { useOpencodeSend } from "./use-opencode-send"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type ChatQueueProps = {
   items: ChatInput[]
@@ -110,9 +118,10 @@ export function ChatQueue({ items, submissions, error, ...props }: ChatQueueProp
         })}
       </div>
       {error ? (
-        <p role="status" className="text-destructive px-1 py-1 text-xs">
-          Could not synchronize messages. {error}
-        </p>
+        <Alert variant="destructive" className="px-1 py-1" role="status">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>Could not synchronize messages. {error}</AlertDescription>
+        </Alert>
       ) : null}
     </section>
   )
@@ -240,9 +249,10 @@ function QueueRow({
         </Button>
       ) : null}
       {error || item.error ? (
-        <p role="status" className="text-destructive mt-2 ml-6 text-xs">
-          {error || item.error}
-        </p>
+        <Alert variant="destructive" className="mt-2 ml-6 w-auto" role="status">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{error || item.error}</AlertDescription>
+        </Alert>
       ) : null}
     </div>
   )

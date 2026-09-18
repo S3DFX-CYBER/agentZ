@@ -43,7 +43,7 @@ import { InputGroupAddon } from "@/components/ui/input-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useChatModelStorage } from "@/components/blocks/chat/use-chat-model-storage"
 import { useFileWorkspace } from "@/components/blocks/chat/file-workspace-store"
 import { NewSessionGreeting } from "@/components/blocks/chat/new-session-greeting"
@@ -108,6 +108,7 @@ import {
   PaperclipIcon,
   Settings2Icon,
   Undo2Icon,
+  CircleAlert,
 } from "lucide-react"
 import { motion } from "motion/react"
 import {
@@ -1407,14 +1408,12 @@ function ChatInner({
             renderItem={({ item }) => (
               <div
                 className={cn(
+                  "mx-auto w-[calc(100%-2rem)] max-w-3xl",
                   item.type === "assistant" && item.isStreaming
                     ? "pb-2"
                     : item.type === "thinking" || item.type === "checkpoint"
                       ? "pb-1.5"
-                      : "pb-4",
-                  item.type === "assistant-error"
-                    ? "w-full"
-                    : "mx-auto w-[calc(100%-2rem)] max-w-3xl"
+                      : "pb-4"
                 )}
               >
                 <TimelineRowView
@@ -2250,9 +2249,11 @@ function TimelineRowView({
 
     case "assistant-error": {
       return (
-        <Alert className="px-4" variant="destructive">
-          <AlertTitle>{row.label}</AlertTitle>
-          <AlertDescription>{row.body}</AlertDescription>
+        <Alert className="mx-auto w-fit max-w-full" variant="destructive">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>
+            <span className="font-medium">{row.label}:</span> {row.body}
+          </AlertDescription>
         </Alert>
       )
     }

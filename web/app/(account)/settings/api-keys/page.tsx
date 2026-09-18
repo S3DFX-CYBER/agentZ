@@ -11,6 +11,7 @@ import { getWorkspaceDirectory } from "@/data/workspaces"
 import { CreateAPIKeyButton } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspaceSlug]/api-keys/dialog"
 import { APIKeysTable } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspaceSlug]/api-keys/table"
 import { APIKeyWorkspaceMenu } from "./api-key-menu"
+import { Info } from "lucide-react"
 
 export const metadata: Metadata = { title: "API keys" }
 
@@ -35,7 +36,8 @@ async function APIKeysContent({ searchParams }: PageProps<"/settings/api-keys">)
         title="API keys"
       />
       {!context.workspaces.length ? (
-        <Alert className="px-4 md:px-6">
+        <Alert variant="info" className="px-4 md:px-6">
+          <Info aria-hidden="true" />
           <AlertTitle>No eligible Workspaces</AlertTitle>
           <AlertDescription>
             To create an API key, choose a ready Workspace that has at least one Agent.

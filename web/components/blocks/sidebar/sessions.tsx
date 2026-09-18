@@ -37,6 +37,7 @@ import {
   Trash2,
   Users,
   X,
+  CircleAlert,
 } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useActionState, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
@@ -55,7 +56,6 @@ import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -63,7 +63,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -942,7 +942,10 @@ function NavSessionsContent({
           />
         ) : null}
         {!searchInvalid && !sessions.isPending && !searchSettling && sessions.isError ? (
-          <p className="text-destructive px-1 py-3 text-sm">Could not load chats</p>
+          <Alert variant="destructive" className="px-1 py-3">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>Could not load chats</AlertDescription>
+          </Alert>
         ) : null}
         {!searchInvalid &&
         !sessions.isPending &&
@@ -1275,7 +1278,10 @@ function SessionGroup({
         <SidebarMenuSub className="[&>li]:before:border-sidebar-border [&>li:last-child]:after:bg-sidebar mx-1.5 translate-x-0 gap-0.5 px-1.5 py-0 [&>li]:relative [&>li]:before:absolute [&>li]:before:top-1/2 [&>li]:before:right-full [&>li]:before:w-1.5 [&>li]:before:border-t [&>li:last-child]:after:absolute [&>li:last-child]:after:top-1/2 [&>li:last-child]:after:right-[calc(100%+0.375rem)] [&>li:last-child]:after:bottom-0 [&>li:last-child]:after:w-px">
           {pages.isError ? (
             <SidebarMenuSubItem>
-              <p className="text-destructive px-2 py-3 text-sm">Could not load chats</p>
+              <Alert variant="destructive" className="px-2 py-3">
+                <CircleAlert aria-hidden="true" />
+                <AlertDescription>Could not load chats</AlertDescription>
+              </Alert>
             </SidebarMenuSubItem>
           ) : null}
           {!pages.isPending && !pages.isError && sessions.length === 0 ? (
@@ -1709,9 +1715,10 @@ function SessionCard({
             </DialogDescription>
           </DialogHeader>
           {pendingState.error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{pendingState.error.message}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>

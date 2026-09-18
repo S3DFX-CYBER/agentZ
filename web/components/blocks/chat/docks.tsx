@@ -9,6 +9,7 @@ import {
   HammerIcon,
   PencilRulerIcon,
   Redo2Icon,
+  CircleAlert,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createAgentOpencodeClient } from "@/lib/opencode/client"
@@ -28,6 +29,7 @@ import type {
 } from "@opencode-ai/sdk/v2"
 import { queryOptions, useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const CUSTOM_ANSWER_KEY = "__custom__"
 const QUESTION_CACHE_MAX = 8
@@ -98,8 +100,9 @@ export function PlanDock({
             Loading plan...
           </div>
         ) : plan.isError ? (
-          <div className="flex items-center justify-between gap-3" role="alert">
-            <p className="text-muted-foreground text-sm">Could not load the plan.</p>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>Could not load the plan.</AlertDescription>
             <Button
               disabled={plan.isFetching}
               onClick={() => void plan.refetch()}
@@ -108,7 +111,7 @@ export function PlanDock({
             >
               Retry
             </Button>
-          </div>
+          </Alert>
         ) : (
           <MessageResponse mode="static">{plan.data}</MessageResponse>
         )}

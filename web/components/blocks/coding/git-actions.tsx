@@ -35,7 +35,14 @@ import {
   useQueryClient,
   type QueryFilters,
 } from "@tanstack/react-query"
-import { ChevronDown, CloudDownload, CloudUpload, GitCommitHorizontal, Info } from "lucide-react"
+import {
+  ChevronDown,
+  CloudDownload,
+  CloudUpload,
+  GitCommitHorizontal,
+  Info,
+  CircleAlert,
+} from "lucide-react"
 import { GitHubDark } from "@ridemountainpig/svgl-react"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth-client"
@@ -72,6 +79,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type Action = NonNullable<ReturnType<typeof gitQuickAction>["action"]> | "commit"
 
@@ -444,7 +452,12 @@ export function GitActions({ thread, workspaceId }: { thread: CodingThread; work
                 -{selected.reduce((sum, file) => sum + (stats.get(file.path)?.deletions ?? 0), 0)}
               </span>
             </div>
-            {review.error ? <p className="text-destructive">{review.error.message}</p> : null}
+            {review.error ? (
+              <Alert variant="destructive">
+                <CircleAlert aria-hidden="true" />
+                <AlertDescription>{review.error.message}</AlertDescription>
+              </Alert>
+            ) : null}
           </div>
           <Field>
             <FieldLabel htmlFor={`quick-commit-${tree.id}`}>Commit message (optional)</FieldLabel>

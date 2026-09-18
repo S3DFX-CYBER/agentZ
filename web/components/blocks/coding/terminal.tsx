@@ -7,13 +7,14 @@ import { Tabs as TabsPrimitive } from "radix-ui"
 import { useTheme } from "next-themes"
 import { Terminal, type ITheme } from "@xterm/xterm"
 import { FitAddon } from "@xterm/addon-fit"
-import { Plus, TerminalSquare, X } from "lucide-react"
+import { Plus, TerminalSquare, X, CircleAlert, TriangleAlert } from "lucide-react"
 import { createAgentOpencodeClient } from "@/lib/opencode/client"
 import { getGatewayBaseURL, getGatewayToken } from "@/lib/gateway/browser-runtime"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Spinner } from "@/components/ui/spinner"
 import "@xterm/xterm/css/xterm.css"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type TerminalProps = {
   agentName: string
@@ -320,11 +321,11 @@ export function CodingTerminal({
         </div>
       ) : null}
       {error ? (
-        <div
-          role="alert"
-          className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-xs"
-        >
-          {error === "load" ? "Could not load terminals." : "Could not start terminal."}
+        <Alert variant="destructive" className="px-3 py-1">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>
+            {error === "load" ? "Could not load terminals." : "Could not start terminal."}
+          </AlertDescription>
           <Button
             size="xs"
             variant="ghost"
@@ -333,29 +334,25 @@ export function CodingTerminal({
           >
             Retry
           </Button>
-        </div>
+        </Alert>
       ) : null}
       {closeError ? (
-        <div
-          role="alert"
-          className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-xs"
-        >
-          Could not close terminal.
+        <Alert variant="destructive" className="px-3 py-1">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>Could not close terminal.</AlertDescription>
           <Button size="xs" variant="ghost" onClick={() => void closeTerminal(closeError)}>
             Retry close
           </Button>
-        </div>
+        </Alert>
       ) : null}
       {streamError ? (
-        <div
-          role="status"
-          className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-xs"
-        >
-          Reconnecting session updates...
+        <Alert variant="warning" className="px-3 py-1" role="status">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>Reconnecting session updates...</AlertDescription>
           <Button size="xs" variant="ghost" onClick={() => setStreamAttempt((value) => value + 1)}>
             Retry
           </Button>
-        </div>
+        </Alert>
       ) : null}
       {sessions.map((pty) => (
         <TabsContent
@@ -549,19 +546,21 @@ function TerminalSession({
   }, [agentName, directory, workspaceId, ptyID, attempt])
   return (
     <div className="bg-background flex h-full min-h-0 flex-col">
-      {status !== "Connected" ? (
+      {status === "Connecting..." ? (
         <div
           role="status"
           className="text-muted-foreground flex shrink-0 items-center gap-2 px-3 py-1 text-xs"
         >
-          {status === "Connecting..." ? <Spinner /> : null}
-          {status}
-          {status !== "Connecting..." ? (
-            <Button size="xs" variant="ghost" onClick={() => setAttempt((value) => value + 1)}>
-              Retry connection
-            </Button>
-          ) : null}
+          <Spinner /> {status}
         </div>
+      ) : status !== "Connected" ? (
+        <Alert variant="warning" className="shrink-0 px-3 py-1">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>{status}</AlertDescription>
+          <Button size="xs" variant="ghost" onClick={() => setAttempt((value) => value + 1)}>
+            Retry connection
+          </Button>
+        </Alert>
       ) : null}
       <div
         ref={element}

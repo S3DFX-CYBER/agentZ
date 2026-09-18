@@ -24,6 +24,7 @@ import { TelemetryTabs } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspa
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { searchParamStringSchema } from "@/lib/search-params"
 import { getWorkspaceScope } from "@/data/workspaces"
+import { CircleAlert } from "lucide-react"
 
 const telemetrySearchParamsSchema = z.object({
   agent_name: searchParamStringSchema,
@@ -259,6 +260,7 @@ async function Filters({
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

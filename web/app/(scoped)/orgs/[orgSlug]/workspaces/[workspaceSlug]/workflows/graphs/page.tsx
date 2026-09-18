@@ -11,6 +11,7 @@ import { RememberPageSelection } from "@/components/page-selection"
 import { getWorkspaceScope } from "@/data/workspaces"
 import { WorkflowsFilters } from "./workflows-filters"
 import { searchParamStringSchema } from "@/lib/search-params"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Workflow Graphs",
@@ -156,6 +157,7 @@ function WorkflowNodeSkeleton({ isLast = false }: { isLast?: boolean }) {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

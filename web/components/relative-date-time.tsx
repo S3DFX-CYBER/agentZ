@@ -22,6 +22,8 @@ export function RelativeDateTime({ value, exact = false, className }: RelativeDa
 
   const date = dayjs(value)
   const exactLabel = date.tz(dayjs.tz.guess()).format("LLLL z")
+  const age = dayjs().diff(date)
+  const relativeLabel = age >= 0 && age < 60_000 ? "just now" : date.fromNow()
   const timestamp = (
     <time
       className={cn("text-muted-foreground tabular-nums", className)}
@@ -29,7 +31,7 @@ export function RelativeDateTime({ value, exact = false, className }: RelativeDa
       suppressHydrationWarning
       tabIndex={exact ? undefined : 0}
     >
-      {exact ? exactLabel : date.fromNow()}
+      {exact ? exactLabel : relativeLabel}
     </time>
   )
 

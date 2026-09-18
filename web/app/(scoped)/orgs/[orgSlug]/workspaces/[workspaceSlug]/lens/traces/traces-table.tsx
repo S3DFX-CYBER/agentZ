@@ -525,6 +525,7 @@ function SpansInspectorContent({
   if (error) {
     return (
       <Alert className="px-6" variant="destructive">
+        <CircleAlert aria-hidden="true" />
         <AlertDescription>{error.message}</AlertDescription>
       </Alert>
     )
@@ -684,10 +685,8 @@ function SpanDetailViewer({
         </div>
         {span && span.spanType !== "agent" ? <InspectorTokenMeter span={span} /> : null}
         {error ? (
-          <Alert
-            className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4 lg:-mx-6 lg:w-[calc(100%+3rem)] lg:px-6"
-            variant="destructive"
-          >
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{error.message}</AlertDescription>
           </Alert>
         ) : pending ? (
@@ -880,6 +879,7 @@ function RuntimeTelemetryContent({
   if (error) {
     return (
       <Alert className="px-6" variant="destructive">
+        <CircleAlert aria-hidden="true" />
         <AlertDescription>{error.message}</AlertDescription>
       </Alert>
     )

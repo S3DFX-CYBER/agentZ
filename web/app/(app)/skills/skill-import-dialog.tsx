@@ -2,15 +2,23 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Bot, Check, FileArchive, Lock, Pencil, Replace, TriangleAlert } from "lucide-react"
+import {
+  Bot,
+  Check,
+  FileArchive,
+  Lock,
+  Pencil,
+  Replace,
+  TriangleAlert,
+  CircleAlert,
+} from "lucide-react"
 import { Controller, useForm, useWatch, type Control, type FieldErrors } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
-import { AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertDescription, AlertTitle, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -502,13 +510,13 @@ function ImportErrorSummary({
   ref: React.Ref<HTMLDivElement>
 }) {
   return (
-    <DialogAlert
+    <Alert
       ref={ref}
       className="outline-none focus-visible:ring-3"
       tabIndex={-1}
       variant="destructive"
     >
-      <TriangleAlert aria-hidden="true" />
+      <CircleAlert aria-hidden="true" />
       <AlertTitle>{error.message}</AlertTitle>
       {error.errors?.length ? (
         <AlertDescription>
@@ -521,7 +529,7 @@ function ImportErrorSummary({
           </ul>
         </AlertDescription>
       ) : null}
-    </DialogAlert>
+    </Alert>
   )
 }
 

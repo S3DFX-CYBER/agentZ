@@ -10,13 +10,12 @@ import {
 } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Box, Plus, Save, Wrench } from "lucide-react"
+import { Box, Plus, Save, Wrench, CircleAlert } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -191,7 +190,12 @@ function SandboxSelect({
             {loading ? "Loading sandboxes..." : "Scroll for more sandboxes"}
           </div>
         ) : null}
-        {error ? <div className="text-destructive px-2 py-1.5 text-xs">{error}</div> : null}
+        {error ? (
+          <Alert variant="destructive" className="px-2 py-1.5">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
       </SelectContent>
     </Select>
   )
@@ -484,11 +488,12 @@ export function AgentDialog({
           </FieldGroup>
         </form>
         {form.formState.errors.root ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>
               <FieldError errors={[form.formState.errors.root]} />
             </AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

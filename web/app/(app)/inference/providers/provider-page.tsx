@@ -92,7 +92,7 @@ function TableSkeleton() {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-4 md:px-6" variant="destructive">
-      <CircleAlert />
+      <CircleAlert aria-hidden="true" />
       <AlertTitle>Could not load inference providers</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
     </Alert>

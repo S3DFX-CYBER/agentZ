@@ -10,6 +10,7 @@ import { McpTable } from "./mcp-table"
 import { McpSheet } from "./mcp-sheet"
 import { NewMcpButton } from "./new-mcp-button"
 import { resourceLabels } from "@/lib/resource-labels"
+import { CircleAlert } from "lucide-react"
 
 const searchSchema = z.object({
   page_token: searchParamStringSchema,
@@ -90,6 +91,7 @@ async function Connections({
   if (result.error)
     return (
       <Alert className="px-4 md:px-6" variant="destructive">
+        <CircleAlert aria-hidden="true" />
         <AlertDescription>{result.error.message}</AlertDescription>
       </Alert>
     )

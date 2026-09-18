@@ -1904,7 +1904,7 @@ export function ProviderSheet({
                       ) : null}
                       {subscriptionOAuth.status === "error" ? (
                         <Alert variant="destructive">
-                          <CircleAlert />
+                          <CircleAlert aria-hidden="true" />
                           <AlertTitle>Connection failed</AlertTitle>
                           <AlertDescription>{subscriptionOAuth.message}</AlertDescription>
                         </Alert>
@@ -2086,7 +2086,7 @@ export function ProviderSheet({
               )}
               {modelCatalogState === "error" && (
                 <Alert variant="warning">
-                  <TriangleAlert />
+                  <TriangleAlert aria-hidden="true" />
                   <AlertTitle>Model catalog unavailable</AlertTitle>
                   <AlertDescription>
                     {isSubscription
@@ -2150,11 +2150,8 @@ export function ProviderSheet({
 
           <div className="space-y-3">
             {submitError && (
-              <Alert
-                className="-mx-4 max-h-32 w-[calc(100%+2rem)] max-w-none overflow-y-auto px-4"
-                variant="destructive"
-              >
-                <CircleAlert />
+              <Alert className="max-h-32 overflow-y-auto" variant="destructive">
+                <CircleAlert aria-hidden="true" />
                 <AlertTitle>{submitError}</AlertTitle>
                 {submitErrors.length > 0 && (
                   <AlertDescription>

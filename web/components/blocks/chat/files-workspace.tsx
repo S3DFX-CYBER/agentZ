@@ -31,6 +31,8 @@ import {
   Search,
   Trash2,
   X,
+  CircleAlert,
+  TriangleAlert,
 } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
@@ -299,6 +301,7 @@ export function FilesWorkspace({
       ) : rootQuery.isError ? (
         <div className="flex h-full items-center justify-center">
           <Alert className="px-6" variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertTitle>Files unavailable</AlertTitle>
             <AlertDescription className="mt-1">
               The agent workspace could not be reached.
@@ -905,9 +908,13 @@ function WorkspaceBody({
                   <Spinner /> Searching files...
                 </div>
               ) : results.error ? (
-                <Button variant="ghost" size="sm" onClick={() => void results.refetch()}>
-                  Search failed. Retry
-                </Button>
+                <Alert variant="destructive" className="p-3">
+                  <CircleAlert aria-hidden="true" />
+                  <AlertDescription>Could not search files.</AlertDescription>
+                  <Button variant="ghost" size="sm" onClick={() => void results.refetch()}>
+                    Retry
+                  </Button>
+                </Alert>
               ) : results.data?.length === 0 ? (
                 <p className="text-muted-foreground p-3 text-xs">No matching files.</p>
               ) : (
@@ -1053,13 +1060,13 @@ function DirectoryTree({
 
   if (directoryQuery.isError) {
     return (
-      <button
-        className="text-destructive flex items-center gap-2 px-3 py-2 text-sm"
-        onClick={() => void directoryQuery.refetch()}
-        type="button"
-      >
-        <RefreshCw className="size-3" /> Retry directory
-      </button>
+      <Alert variant="destructive" className="px-3 py-2">
+        <CircleAlert aria-hidden="true" />
+        <AlertDescription>Could not load directory.</AlertDescription>
+        <Button variant="ghost" size="sm" onClick={() => void directoryQuery.refetch()}>
+          <RefreshCw data-icon="inline-start" /> Retry directory
+        </Button>
+      </Alert>
     )
   }
 
@@ -1512,7 +1519,8 @@ function EditorPane({
       </div>
 
       {draft.truncated ? (
-        <Alert variant="warning">
+        <Alert variant="warning" className="shrink-0 px-3 py-2">
+          <TriangleAlert aria-hidden="true" />
           <AlertTitle>Large file opened read-only</AlertTitle>
           <AlertDescription>
             The editor shows a truncated preview. Download the file to view it in full.
@@ -1521,12 +1529,13 @@ function EditorPane({
       ) : null}
 
       {draft.conflict ? (
-        <Alert variant="warning">
+        <Alert variant="warning" className="shrink-0 px-3 py-2">
+          <TriangleAlert aria-hidden="true" />
           <AlertTitle>This file changed on disk</AlertTitle>
           <AlertDescription className="mt-1">
             Reload the Agent copy, or overwrite it with your draft.
           </AlertDescription>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-wrap gap-2">
             <Button
               onClick={() =>
                 void fileQuery.refetch().then((result) => {
@@ -1727,7 +1736,12 @@ function RawPreview({
   )
 
   if (rawQuery.isError) {
-    return <p className="text-destructive p-6 text-sm">Could not load preview.</p>
+    return (
+      <Alert variant="destructive" className="p-6">
+        <CircleAlert aria-hidden="true" />
+        <AlertDescription>Could not load preview.</AlertDescription>
+      </Alert>
+    )
   }
 
   if (

@@ -705,7 +705,12 @@ function McpToolsPanel({
   }
 
   if (query.isError) {
-    return <div className="text-destructive text-sm">{query.error.message}</div>
+    return (
+      <Alert variant="destructive">
+        <CircleAlert aria-hidden="true" />
+        <AlertDescription>{query.error.message}</AlertDescription>
+      </Alert>
+    )
   }
 
   const detail = query.data
@@ -1025,9 +1030,10 @@ function McpStep({
           pagination={
             <div className="space-y-2">
               {page.error ? (
-                <p className="text-destructive text-center text-sm" role="alert">
-                  {page.error.message}
-                </p>
+                <Alert variant="destructive">
+                  <CircleAlert aria-hidden="true" />
+                  <AlertDescription>{page.error.message}</AlertDescription>
+                </Alert>
               ) : null}
               <TablePagination
                 canGoNext={page.canGoNext}
@@ -1194,9 +1200,10 @@ function SkillsStep({
           pagination={
             <div className="space-y-2">
               {page.error ? (
-                <p className="text-destructive text-center text-sm" role="alert">
-                  {page.error.message}
-                </p>
+                <Alert variant="destructive">
+                  <CircleAlert aria-hidden="true" />
+                  <AlertDescription>{page.error.message}</AlertDescription>
+                </Alert>
               ) : null}
               <TablePagination
                 canGoNext={page.canGoNext}
@@ -1449,7 +1456,7 @@ function ModelsStep({
             </div>
             {refreshError ? (
               <Alert variant="destructive">
-                <CircleAlert />
+                <CircleAlert aria-hidden="true" />
                 <AlertDescription>{refreshError}</AlertDescription>
               </Alert>
             ) : null}
@@ -1533,7 +1540,7 @@ function ModelsStep({
                           </div>
                           {pool.state === "PartiallyDegraded" || pool.warnings.length ? (
                             <Alert variant="warning" className="mt-2">
-                              <TriangleAlert />
+                              <TriangleAlert aria-hidden="true" />
                               <AlertDescription>
                                 {failures.length
                                   ? `${failures.map((member) => `${member.provider}/${member.model}`).join(", ")} unavailable. `
@@ -2072,6 +2079,7 @@ function AllowedHostsStep({
       </FieldSet>
       {generalError ? (
         <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
           <AlertDescription>
             <p className="font-medium">{generalError.message}</p>
             {generalError.errors && generalError.errors.length > 0 ? (

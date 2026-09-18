@@ -17,7 +17,7 @@ import {
   XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
-import { AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertDescription, AlertTitle, Alert } from "@/components/ui/alert"
 import { AdminDataGrid, type AdminColumnLayout } from "@/components/admin-data-grid"
 import { AdministrationState } from "@/components/administration"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button"
 import { UserAvatar } from "@/components/ui/avatar"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -56,7 +55,7 @@ import { ProviderSheet } from "./provider-sheet"
 import { ProviderIcon, providerKindLabels } from "./provider-shared"
 
 const layout: Record<string, AdminColumnLayout> = {
-  display_name: { minWidth: 224, contentMaxWidth: 320 },
+  display_name: { minWidth: 208, contentMaxWidth: 304 },
   kind: { minWidth: 128, width: 128 },
   state: { minWidth: 128, width: 128 },
   model_count: { minWidth: 96, width: 96 },
@@ -378,11 +377,11 @@ function DeleteProviderDialog({
           </DialogDescription>
         </DialogHeader>
         {error ? (
-          <DialogAlert variant="destructive">
-            <CircleAlert />
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertTitle>Provider could not be deleted</AlertTitle>
             <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

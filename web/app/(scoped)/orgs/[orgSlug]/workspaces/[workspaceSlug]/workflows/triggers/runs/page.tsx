@@ -15,6 +15,7 @@ import { getWorkspaceScope } from "@/data/workspaces"
 import { RunsFilters } from "./runs-filters"
 import { RunsTable } from "./runs-table"
 import { searchParamStringSchema } from "@/lib/search-params"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Workflow Runs",
@@ -196,6 +197,7 @@ function FiltersSkeleton() {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

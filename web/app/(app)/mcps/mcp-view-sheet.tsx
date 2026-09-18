@@ -91,7 +91,7 @@ export function McpViewSheet({
           </div>
         ) : query.error instanceof Error ? (
           <Alert className="px-4" variant="destructive">
-            <CircleAlert />
+            <CircleAlert aria-hidden="true" />
             <AlertTitle>Connection could not be loaded</AlertTitle>
             <AlertDescription>{query.error.message}</AlertDescription>
           </Alert>

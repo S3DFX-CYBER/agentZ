@@ -7,7 +7,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { Download, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { Download, MoreHorizontal, Pencil, Trash2, CircleAlert } from "lucide-react"
 import { useServerSorting, useTokenPagination } from "@/lib/use-token-pagination"
 import { AgentGettingReady } from "@/components/agent-readiness"
 import { AdminDataGrid, type AdminColumnLayout } from "@/components/admin-data-grid"
@@ -33,6 +33,7 @@ import type {
   SkillSummarySortByQuery,
   SortOrderQuery,
 } from "@/lib/gateway/client"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const layout: Record<string, AdminColumnLayout> = {
   select: { minWidth: 48, width: 48 },
@@ -165,7 +166,10 @@ export function SkillTable({
       Loading skills...
     </p>
   ) : error ? (
-    <p className="text-destructive py-8 text-center">{error.message}</p>
+    <Alert variant="destructive" className="py-8">
+      <CircleAlert aria-hidden="true" />
+      <AlertDescription>{error.message}</AlertDescription>
+    </Alert>
   ) : (
     <p className="text-muted-foreground py-8 text-center">No skills found.</p>
   )

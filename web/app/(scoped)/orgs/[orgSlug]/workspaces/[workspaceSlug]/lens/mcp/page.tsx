@@ -16,6 +16,7 @@ import { LensFilters } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspace
 import { lensDateRange } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspaceSlug]/lens/search-params"
 import { searchParamStringSchema, type SearchParamStringInput } from "@/lib/search-params"
 import { getWorkspaceScope } from "@/data/workspaces"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "MCP Observability",
@@ -172,6 +173,7 @@ async function resolveMcpSearchParams(
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

@@ -11,6 +11,7 @@ import { getWorkspaceScope } from "@/data/workspaces"
 import { searchParamStringSchema } from "@/lib/search-params"
 import { WorkflowRunGraphFilters } from "./workflow-run-graph-filters"
 import { WorkflowRunGraph } from "./workflow-run-graph"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Workflow Run Graph",
@@ -102,6 +103,7 @@ function GraphSkeleton() {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

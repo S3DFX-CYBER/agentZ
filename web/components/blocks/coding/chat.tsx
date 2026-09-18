@@ -20,6 +20,8 @@ import {
 import { runWorkspaceGit, startWorkspaceOperation } from "@/lib/coding/review"
 import { CheckoutPicker } from "./projects"
 import { codingDrafts, useCodingDrafts, type CodingDraft } from "./drafts"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Info } from "lucide-react"
 
 export function CodingChat({
   project,
@@ -91,9 +93,12 @@ export function CodingChat({
   }
   if (!selected)
     return (
-      <div className="text-muted-foreground m-auto p-6 text-sm">
-        No agent is available. Ask a workspace administrator for access.
-      </div>
+      <Alert variant="info" className="p-6">
+        <Info aria-hidden="true" />
+        <AlertDescription>
+          No agent is available. Ask a workspace administrator for access.
+        </AlertDescription>
+      </Alert>
     )
   if (!ready || !draft)
     return (

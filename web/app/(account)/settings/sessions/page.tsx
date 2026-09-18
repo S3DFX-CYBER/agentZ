@@ -10,6 +10,7 @@ import { getDB, schema } from "@/db"
 import { deleteSessionFormAction } from "@/data/session.actions"
 import { SessionsTable } from "./sessions-table"
 import { searchParamStringSchema, type SearchParamStringInput } from "@/lib/search-params"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Sessions",
@@ -97,6 +98,7 @@ function TableSkeleton() {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-4 md:px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

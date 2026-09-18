@@ -5,7 +5,7 @@ import Link from "next/link"
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
-import { UserPlus } from "lucide-react"
+import { UserPlus, CircleAlert } from "lucide-react"
 import { z } from "zod"
 import type { AuthError, SocialProvider } from "@/app/(auth)/shared"
 import { authErrorMessages } from "@/app/(auth)/shared"
@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { SocialAuthButtons } from "./social-auth-buttons"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const signUpSchema = z
   .object({
@@ -142,7 +143,12 @@ export function SignUpForm({
         />
         <span className="text-foreground text-3xl font-semibold tracking-tight">AgentZ</span>
       </div>
-      {pageError ? <FieldError className="text-center">{pageError}</FieldError> : null}
+      {pageError ? (
+        <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{pageError}</AlertDescription>
+        </Alert>
+      ) : null}
       {showPasswordAuth ? (
         <form
           className="flex flex-col gap-5"
@@ -255,7 +261,12 @@ export function SignUpForm({
               )}
               Sign up
             </Button>
-            {passwordActionError ? <FieldError>{passwordActionError}</FieldError> : null}
+            {passwordActionError ? (
+              <Alert variant="destructive">
+                <CircleAlert aria-hidden="true" />
+                <AlertDescription>{passwordActionError}</AlertDescription>
+              </Alert>
+            ) : null}
           </div>
         </form>
       ) : null}

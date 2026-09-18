@@ -18,6 +18,7 @@ import { TracesSkeleton } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[worksp
 import { TracesTable } from "@/app/(scoped)/orgs/[orgSlug]/workspaces/[workspaceSlug]/lens/traces/traces-table"
 import { searchParamStringSchema, type SearchParamStringInput } from "@/lib/search-params"
 import { getWorkspaceScope } from "@/data/workspaces"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Traces",
@@ -234,6 +235,7 @@ function parseLimitParam(value?: string) {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

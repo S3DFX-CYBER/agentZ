@@ -5,6 +5,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query"
 import type { LucideIcon } from "lucide-react"
 import {
   Box,
+  CircleAlert,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -418,6 +419,7 @@ export function PackageSearch({
       ) : null}
       {searchDependent && hasError ? (
         <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
           <AlertDescription>{data?.error?.message ?? "Search failed"}</AlertDescription>
         </Alert>
       ) : null}

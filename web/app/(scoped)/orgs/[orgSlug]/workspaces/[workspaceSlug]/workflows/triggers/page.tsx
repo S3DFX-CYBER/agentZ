@@ -25,6 +25,7 @@ import { TriggersFilters } from "./triggers-filters"
 import { ScheduleTriggersTable } from "./triggers-table"
 import { WebhookTriggersTable, type WebhookTriggerRow } from "./webhook-triggers-table"
 import { searchParamStringSchema } from "@/lib/search-params"
+import { CircleAlert } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Workflow Triggers",
@@ -250,6 +251,7 @@ function TableSkeleton() {
 function ErrorPanel({ message }: { message: string }) {
   return (
     <Alert className="px-6" variant="destructive">
+      <CircleAlert aria-hidden="true" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )

@@ -4,13 +4,12 @@ import type { Route } from "next"
 import { useActionState, useId, useState } from "react"
 import { useRouter } from "@bprogress/next/app"
 import { useFormStatus } from "react-dom"
-import { CircleAlertIcon, ShieldOffIcon, Trash2Icon } from "lucide-react"
+import { ShieldOffIcon, Trash2Icon, CircleAlert } from "lucide-react"
 import { toast } from "sonner"
-import { AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertDescription, AlertTitle, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -95,13 +94,13 @@ export function DestructiveConfirmationDialog({
         <form action={formAction} className="contents">
           <input name="fingerprint" type="hidden" value={state.fingerprint ?? fingerprint} />
           {state.error ? (
-            <DialogAlert variant="destructive">
-              <CircleAlertIcon aria-hidden="true" />
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertTitle>
                 {kind === "disable" ? "Membership was not disabled" : "Deletion failed"}
               </AlertTitle>
               <AlertDescription>{state.error}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <FieldGroup>
             <Field>

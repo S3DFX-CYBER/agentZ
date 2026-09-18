@@ -39,6 +39,8 @@ import {
   TextWrap,
   Trash2,
   X,
+  CircleAlert,
+  TriangleAlert,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -478,44 +480,51 @@ export function GitChanges({
     !data?.head ||
     data.remote_head === data.head
 
+  if (!data && status.error) {
+    return (
+      <Alert variant="destructive" className="p-4">
+        <CircleAlert aria-hidden="true" />
+        <AlertTitle>Could not load repository</AlertTitle>
+        <AlertDescription>{status.error.message}</AlertDescription>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={status.isFetching}
+          onClick={() => void status.refetch()}
+        >
+          <RefreshCw data-icon="inline-start" /> Retry
+        </Button>
+      </Alert>
+    )
+  }
+
   if (!data)
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyTitle>
-            {status.isPending ? "Loading repository" : "Could not load repository"}
-          </EmptyTitle>
-          <EmptyDescription>{status.error?.message}</EmptyDescription>
+          <EmptyTitle>Loading repository</EmptyTitle>
         </EmptyHeader>
-        {status.error ? (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={status.isFetching}
-            onClick={() => void status.refetch()}
-          >
-            <RefreshCw data-icon="inline-start" /> Retry
-          </Button>
-        ) : null}
       </Empty>
     )
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {status.error ? (
-        <Alert variant="warning">
+        <Alert variant="warning" className="shrink-0 px-4 py-2">
+          <TriangleAlert aria-hidden="true" />
           <AlertTitle>Repository refresh failed</AlertTitle>
           <AlertDescription>{status.error.message}</AlertDescription>
         </Alert>
       ) : null}
       {data.remote_error ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="shrink-0 px-4 py-2">
+          <CircleAlert aria-hidden="true" />
           <AlertDescription>{data.remote_error}</AlertDescription>
         </Alert>
       ) : null}
       {conflicts.length ? (
-        <Alert variant="warning">
-          <GitMerge />
+        <Alert variant="warning" className="shrink-0 px-4 py-2">
+          <TriangleAlert aria-hidden="true" />
           <AlertTitle>
             {conflicts.length} conflicted {conflicts.length === 1 ? "file" : "files"}
           </AlertTitle>
@@ -970,6 +979,7 @@ export function GitChanges({
                   </FieldGroup>
                   {sync.error && sync.variables?.action === "commit" ? (
                     <Alert variant="destructive" className="mx-4 mb-4 w-auto">
+                      <CircleAlert aria-hidden="true" />
                       <AlertDescription>{sync.error.message}</AlertDescription>
                     </Alert>
                   ) : null}
@@ -1234,6 +1244,7 @@ export function GitChanges({
             ) : null}
             {review.error || workerError ? (
               <Alert variant="destructive">
+                <CircleAlert aria-hidden="true" />
                 <AlertTitle>Could not load comparison</AlertTitle>
                 <AlertDescription>{review.error?.message ?? workerError}</AlertDescription>
                 {review.error ? (
@@ -1404,6 +1415,7 @@ export function GitChanges({
           />
           {stashes.error ? (
             <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{stashes.error.message}</AlertDescription>
               <Button variant="outline" size="sm" onClick={() => void stashes.refetch()}>
                 Retry

@@ -17,6 +17,7 @@ import {
   Search,
   Settings2,
   X,
+  TriangleAlert,
 } from "lucide-react"
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -663,7 +664,7 @@ export function OAuthSecretSheet({
         </SheetHeader>
         {discoveryWarningVisible ? (
           <Alert className="mt-4 px-4" variant="warning">
-            <CircleAlert />
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Auto-discovery failed</AlertTitle>
             <AlertDescription>{discoveryWarningVisible.message}</AlertDescription>
             <AlertAction>
@@ -970,8 +971,8 @@ export function OAuthSecretSheet({
             </Accordion>
           </FieldGroup>
           {submitError ? (
-            <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4" variant="destructive">
-              <CircleAlert />
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertTitle>Secret creation failed</AlertTitle>
               <AlertDescription>{submitError}</AlertDescription>
             </Alert>
