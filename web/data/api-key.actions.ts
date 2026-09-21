@@ -157,7 +157,7 @@ export async function createAPIKeyFormAction(
         )
 
   try {
-    const hash = await defaultKeyHasher(secret)
+    const hash = hashAPIKey(secret)
     await getDB().transaction(async (tx) => {
       const [workspace] = await tx
         .select({ id: schema.workspaces.id })
