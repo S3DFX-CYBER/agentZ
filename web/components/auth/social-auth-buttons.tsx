@@ -3,8 +3,9 @@
 import { GitHubDark, GitHubLight, Google } from "@ridemountainpig/svgl-react"
 import type { AuthPath, SocialProvider } from "@/app/(auth)/shared"
 import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CircleAlert } from "lucide-react"
 
 type SocialAuthButtonsProps = {
   authPath: AuthPath
@@ -70,7 +71,10 @@ export function SocialAuthButtons({
             {submitLabel} with {provider === "github" ? "GitHub" : "Google"}
           </Button>
           {errors?.[provider] ? (
-            <FieldError className="text-center leading-normal">{errors[provider]}</FieldError>
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertDescription>{errors[provider]}</AlertDescription>
+            </Alert>
           ) : null}
         </form>
       ))}

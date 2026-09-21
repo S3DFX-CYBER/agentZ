@@ -4,7 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
-import { KeyRound } from "lucide-react"
+import { KeyRound, CircleAlert } from "lucide-react"
 import type { PutSecretFormAction, PutSecretFormState } from "@/data/types"
 import { secretFormInputSchema } from "@/data/schema"
 import type * as z from "zod"
@@ -179,10 +179,8 @@ export function SecretSheet({
             </Field>
           </FieldGroup>
           {generalErrorMessage ? (
-            <Alert
-              className="-mx-4 w-[calc(100%+2rem)] max-w-none shrink-0 px-4"
-              variant="destructive"
-            >
+            <Alert className="shrink-0" variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{generalErrorMessage}</AlertDescription>
             </Alert>
           ) : null}

@@ -21,15 +21,14 @@ import {
 } from "@ridemountainpig/svgl-react"
 import type { ColumnDef, SortingState } from "@tanstack/react-table"
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table"
-import { Globe, LogOut, Monitor, MoreHorizontal } from "lucide-react"
+import { Globe, LogOut, Monitor, MoreHorizontal, CircleAlert } from "lucide-react"
 import { formatTimestampWithAge } from "@/lib/format"
 import type { DeleteSessionFormState } from "@/data/types"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -289,9 +288,10 @@ function DeleteSessionButton({
             </DialogDescription>
           </DialogHeader>
           {state.error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{state.error.message}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>

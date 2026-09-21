@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import type { ComponentProps, ReactNode } from "react"
-import { Clock3, FolderSearch, LoaderCircle, Trash2 } from "lucide-react"
+import { FolderSearch, LoaderCircle, Trash2, Info } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -23,7 +23,7 @@ type AdministrationStatus = "ready" | "provisioning" | "deleting" | "failed"
 export function AdministrationLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className="@container flex min-w-0 flex-1 flex-col [&_[data-slot=table-head]]:h-8 [&_[data-slot=table-head]]:px-4 [&_[data-slot=table-head]]:align-middle [&_[data-slot=table]]:w-full"
+      className="@container flex min-h-0 min-w-0 flex-1 flex-col [&_[data-slot=table-head]]:h-8 [&_[data-slot=table-head]]:px-4 [&_[data-slot=table-head]]:align-middle [&_[data-slot=table]]:w-full"
       data-administration
     >
       {children}
@@ -349,8 +349,8 @@ export function ImpactReviewFrame({
             ))}
           </div>
         ) : (
-          <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4 md:-mx-6 md:w-[calc(100%+3rem)] md:px-6">
-            <Clock3 aria-hidden="true" />
+          <Alert variant="info">
+            <Info aria-hidden="true" />
             <AlertTitle>No dependent changes</AlertTitle>
             <AlertDescription>
               This action does not change any dependent resources.

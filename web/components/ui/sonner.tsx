@@ -28,9 +28,12 @@ const toasterStyle = {
   "--error-text": "var(--foreground)",
   "--error-border": "color-mix(in oklab, var(--destructive) 35%, var(--border))",
   "--border-radius": "var(--radius)",
+  "--toast-close-button-start": "auto",
+  "--toast-close-button-end": "0",
+  "--toast-close-button-transform": "translate(35%, -35%)",
 } satisfies CSSProperties & Record<`--${string}`, string>
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Toaster = (props: ToasterProps) => {
   const { resolvedTheme } = useTheme()
 
   return (
@@ -45,6 +48,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         loading: <Loader2Icon className="text-muted-foreground size-4 animate-spin" />,
       }}
       richColors
+      closeButton
       style={toasterStyle}
       {...props}
     />

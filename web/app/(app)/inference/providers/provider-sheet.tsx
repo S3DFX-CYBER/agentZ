@@ -91,14 +91,19 @@ import {
 } from "@/data/inference-provider.actions"
 import { formatCompactNumber } from "@/lib/format"
 import {
-  type CreateInferenceProviderOAuthTicketResponse,
   type InferenceModel,
   type InferenceModelModality,
   type InferenceProvider,
   type InferenceProviderCatalogEntry,
   type InferenceProviderWriteDiscriminatorWritable,
 } from "@/lib/gateway/client"
-import { zInferenceProviderWriteDiscriminatorWritable } from "@/lib/gateway/client/zod.gen"
+import {
+  zInferenceModel,
+  zInferenceModelCapabilities,
+  zInferenceModelLimits,
+  zInferenceModelModalities,
+  zInferenceProviderWriteDiscriminatorWritable,
+} from "@/lib/gateway/client/zod.gen"
 import { ProviderIcon, providerKindLabels } from "./provider-shared"
 import { cn } from "@/lib/utils"
 
@@ -121,17 +126,9 @@ const modalities = [
 const capabilities = ["attachment", "reasoning", "temperature", "tool_call"] as const
 
 type SubscriptionOAuthState =
-  | { status: "idle" }
-  | { status: "starting" }
-  | {
-      status: "challenge"
-      verificationUri: string
-      userCode: string
-      interval: number
-      expiresAt: string
-    }
-  | { status: "connected"; connection: CreateInferenceProviderOAuthTicketResponse }
-  | { status: "error"; message: string }
+  | { status: "idle" | "starting" }
+  | Awaited<ReturnType<typeof startInferenceProviderOAuthAction>>
+  | Exclude<Awaited<ReturnType<typeof pollInferenceProviderOAuthAction>>, { status: "pending" }>
 
 const gatewayControlledHeaders = new Set([
   "connection",
@@ -428,25 +425,32 @@ const providerServerErrorFields = new Map<
   ["anthropic_compatible.skip_tls_verify", "anthropic_compatible.skip_tls_verify"],
 ])
 
-function getProviderServerErrorField(
-  path: string
-): FieldPath<InferenceProviderWriteDiscriminatorWritable> | undefined {
-  const field = path.startsWith("provider.") ? path.slice("provider.".length) : path
-  const mapped = providerServerErrorFields.get(field)
-  if (mapped) {
-    return mapped
-  }
-  if (/^models\.\d+(\.|$)/.test(field)) {
-    return field as FieldPath<InferenceProviderWriteDiscriminatorWritable>
-  }
-  if (/^(openai_compatible|anthropic_compatible)\.headers\.\d+(\.(name|value))?$/.test(field)) {
-    return field as FieldPath<InferenceProviderWriteDiscriminatorWritable>
-  }
-  if (field === "models") {
-    return field
-  }
-  return undefined
-}
+const providerServerErrorPathSchema = z
+  .union([
+    z.literal("models"),
+    z.templateLiteral([
+      "models.",
+      z.int(),
+      z.union([
+        z.literal(""),
+        z.templateLiteral([".", zInferenceModel.keyof()]),
+        z.templateLiteral([".capabilities.", zInferenceModelCapabilities.keyof()]),
+        z.templateLiteral([".limits.", zInferenceModelLimits.keyof()]),
+        z.templateLiteral([
+          ".modalities.",
+          zInferenceModelModalities.keyof(),
+          z.union([z.literal(""), z.templateLiteral([".", z.int()])]),
+        ]),
+      ]),
+    ]),
+    z.templateLiteral([
+      z.enum(["openai_compatible", "anthropic_compatible"]),
+      ".headers.",
+      z.int(),
+      z.enum(["", ".name", ".value"]),
+    ]),
+  ])
+  .refine((path) => !path.includes(".-"))
 
 const providerFormSchema = z
   .discriminatedUnion(
@@ -476,15 +480,6 @@ const providerFormSchema = z
         kind: z.literal("Gemini", { error: "Select Gemini as the provider kind" }),
         gemini: z.object({ base_url: baseURLSchema }),
         credentials: apiKeyCredentialsSchema,
-      }),
-      z.object({
-        ...providerFields,
-        catalog_provider: z.literal("github-copilot", {
-          error: "Select GitHub Copilot from the provider list",
-        }),
-        kind: z.literal("GitHubCopilot", {
-          error: "Select GitHub Copilot as the provider kind",
-        }),
       }),
       z.object({
         ...providerFields,
@@ -694,9 +689,7 @@ export function ProviderSheet({
 }) {
   const defaults = provider
     ? zInferenceProviderWriteDiscriminatorWritable.parse(
-        provider.kind === "OpenAICodex" || provider.kind === "GitHubCopilot"
-          ? provider
-          : { ...provider, credentials: {} }
+        provider.kind === "OpenAICodex" ? provider : { ...provider, credentials: {} }
       )
     : ({
         display_name: "",
@@ -710,7 +703,7 @@ export function ProviderSheet({
     () =>
       providerFormSchema.superRefine((values, ctx) => {
         const isCreate = provider === undefined
-        if (values.kind === "OpenAICodex" || values.kind === "GitHubCopilot") {
+        if (values.kind === "OpenAICodex") {
           return
         }
         if (values.kind === "OpenAI" || values.kind === "Anthropic" || values.kind === "Gemini") {
@@ -839,7 +832,7 @@ export function ProviderSheet({
   })
   const models = useFieldArray({ control: form.control, name: "models", keyName: "key" })
   const kind = useWatch({ control: form.control, name: "kind", defaultValue: defaults.kind })
-  const isSubscription = kind === "OpenAICodex" || kind === "GitHubCopilot"
+  const isSubscription = kind === "OpenAICodex"
   const compatibleField =
     kind === "AnthropicCompatible" ? "anthropic_compatible" : "openai_compatible"
   const isCompatibleKind = kind === "OpenAICompatible" || kind === "AnthropicCompatible"
@@ -911,13 +904,10 @@ export function ProviderSheet({
     }
 
     let ignore = false
-    let request = suggestInferenceModelsAction(scope, catalogProvider, kind)
-    if (isSubscription) {
-      if (!provider) {
-        return
-      }
-      request = refreshInferenceProviderModelsAction(scope, provider.id)
-    }
+    const request =
+      isSubscription && provider
+        ? refreshInferenceProviderModelsAction(scope, provider.id)
+        : suggestInferenceModelsAction(scope, catalogProvider, kind)
     void request.then((result) => {
       if (ignore) {
         return
@@ -978,7 +968,7 @@ export function ProviderSheet({
   )
 
   function connectSubscription() {
-    if (kind !== "OpenAICodex" && kind !== "GitHubCopilot") {
+    if (kind !== "OpenAICodex") {
       return
     }
     setSubscriptionOAuth({ status: "starting" })
@@ -1026,7 +1016,9 @@ export function ProviderSheet({
             setSubscriptionOAuth({ status: "error", message: error.message })
             continue
           }
-          const field = getProviderServerErrorField(error.field)
+          const field =
+            providerServerErrorFields.get(errorField) ??
+            providerServerErrorPathSchema.safeParse(errorField).data
           if (field) {
             form.setError(field, { type: "server", message: error.message }, { shouldFocus })
             shouldFocus = false
@@ -1221,15 +1213,6 @@ export function ProviderSheet({
                                           ...common,
                                           kind: "Gemini",
                                           gemini: { base_url: entry.base_url },
-                                        })
-                                        break
-                                      case "GitHubCopilot":
-                                        setModelCatalogState("idle")
-                                        form.reset({
-                                          catalog_provider: "github-copilot",
-                                          display_name: displayName,
-                                          models: [],
-                                          kind: "GitHubCopilot",
                                         })
                                         break
                                       case "VertexAI":
@@ -1837,83 +1820,97 @@ export function ProviderSheet({
               title={isSubscription ? "Subscription" : "Credentials"}
               description={
                 isSubscription
-                  ? "Sign in to use your existing subscription."
+                  ? provider || subscriptionOAuth.status === "connected"
+                    ? undefined
+                    : "Sign in to use your existing subscription."
                   : provider
                     ? "Leave blank to keep the current credentials."
                     : undefined
               }
             >
-              {isSubscription && provider ? (
-                <Alert>
-                  <Check />
-                  <AlertTitle>Connected</AlertTitle>
-                  <AlertDescription>Your subscription is ready to use.</AlertDescription>
-                </Alert>
-              ) : null}
-              {isSubscription && !provider ? (
-                <div className="space-y-3 rounded-lg border p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">Connect {providerKindLabels[kind]}</p>
-                      <p className="text-muted-foreground text-sm">
-                        Complete sign-in in a new tab. We will detect when it finishes.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={connectSubscription}
-                      disabled={
-                        pending ||
-                        subscriptionOAuth.status === "starting" ||
-                        subscriptionOAuth.status === "challenge" ||
-                        subscriptionOAuth.status === "connected"
-                      }
-                    >
-                      {subscriptionOAuth.status === "starting" ? <Spinner /> : <Cable />}
-                      Connect
-                    </Button>
-                  </div>
-                  {subscriptionOAuth.status === "challenge" ? (
-                    <div className="bg-muted/40 space-y-3 rounded-md border p-3">
-                      <p className="text-muted-foreground text-sm">
-                        Enter this one-time code on the provider sign-in page, then return here.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <code className="bg-background flex-1 rounded border px-3 py-2 text-center text-lg font-semibold tracking-widest">
-                          {subscriptionOAuth.userCode}
-                        </code>
-                        <CopyButton content={subscriptionOAuth.userCode} />
+              {isSubscription ? (
+                <div className="flex flex-col gap-4 rounded-lg border p-4">
+                  {provider || subscriptionOAuth.status === "connected" ? (
+                    <div role="status" className="flex items-start gap-3">
+                      <div className="bg-success/10 text-success flex size-8 shrink-0 items-center justify-center rounded-full">
+                        <Check aria-hidden className="size-4" />
                       </div>
-                      <Button type="button" variant="outline" asChild>
-                        <a
-                          href={subscriptionOAuth.verificationUri}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Continue to {providerKindLabels[kind]} <ExternalLink />
-                        </a>
-                      </Button>
-                      <p className="text-muted-foreground flex items-center gap-2 text-xs">
-                        <Spinner className="size-3" /> Waiting for you to finish signing in...
-                      </p>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-success text-sm font-medium">
+                          Connected to {providerKindLabels[kind]}
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          {provider
+                            ? "Your subscription is ready to use."
+                            : "Choose which models Agents may use, then add the provider."}
+                        </p>
+                      </div>
                     </div>
-                  ) : null}
-                  {subscriptionOAuth.status === "connected" ? (
-                    <Alert>
-                      <Check />
-                      <AlertTitle>Connected</AlertTitle>
-                      <AlertDescription>
-                        Choose which models Agents may use, then add the provider.
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
-                  {subscriptionOAuth.status === "error" ? (
-                    <Alert variant="destructive">
-                      <CircleAlert />
-                      <AlertTitle>Connection failed</AlertTitle>
-                      <AlertDescription>{subscriptionOAuth.message}</AlertDescription>
-                    </Alert>
-                  ) : null}
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-medium">Connect {providerKindLabels[kind]}</p>
+                          <p className="text-muted-foreground text-sm">
+                            Complete sign-in in a new tab. We will detect when it finishes.
+                          </p>
+                        </div>
+                        {subscriptionOAuth.status !== "challenge" ? (
+                          <Button
+                            type="button"
+                            onClick={connectSubscription}
+                            disabled={pending || subscriptionOAuth.status === "starting"}
+                          >
+                            {subscriptionOAuth.status === "starting" ? (
+                              <Spinner aria-hidden />
+                            ) : (
+                              <Cable />
+                            )}
+                            {subscriptionOAuth.status === "starting" ? "Connecting..." : "Connect"}
+                          </Button>
+                        ) : null}
+                      </div>
+                      {subscriptionOAuth.status === "challenge" ? (
+                        <div className="flex flex-col items-start gap-3">
+                          <p className="text-muted-foreground text-sm">
+                            Enter this one-time code on the provider sign-in page.
+                          </p>
+                          <div className="bg-muted/50 flex items-center gap-3 rounded-md px-3 py-2">
+                            <code className="text-lg font-semibold tracking-widest">
+                              {subscriptionOAuth.userCode}
+                            </code>
+                            <CopyButton
+                              content={subscriptionOAuth.userCode}
+                              label="Copy sign-in code"
+                            />
+                          </div>
+                          <Button type="button" variant="outline" asChild>
+                            <a
+                              href={subscriptionOAuth.verificationUri}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Continue to {providerKindLabels[kind]} <ExternalLink />
+                            </a>
+                          </Button>
+                          <p
+                            role="status"
+                            className="text-muted-foreground flex items-center gap-2 text-xs"
+                          >
+                            <Spinner aria-hidden className="size-3" /> Waiting for you to finish
+                            signing in...
+                          </p>
+                        </div>
+                      ) : null}
+                      {subscriptionOAuth.status === "error" ? (
+                        <Alert variant="destructive">
+                          <CircleAlert aria-hidden="true" />
+                          <AlertTitle>Connection failed</AlertTitle>
+                          <AlertDescription>{subscriptionOAuth.message}</AlertDescription>
+                        </Alert>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               ) : null}
               {(kind === "OpenAI" ||
@@ -2089,7 +2086,7 @@ export function ProviderSheet({
               )}
               {modelCatalogState === "error" && (
                 <Alert variant="warning">
-                  <TriangleAlert />
+                  <TriangleAlert aria-hidden="true" />
                   <AlertTitle>Model catalog unavailable</AlertTitle>
                   <AlertDescription>
                     {isSubscription
@@ -2153,11 +2150,8 @@ export function ProviderSheet({
 
           <div className="space-y-3">
             {submitError && (
-              <Alert
-                className="-mx-4 max-h-32 w-[calc(100%+2rem)] max-w-none overflow-y-auto px-4"
-                variant="destructive"
-              >
-                <CircleAlert />
+              <Alert className="max-h-32 overflow-y-auto" variant="destructive">
+                <CircleAlert aria-hidden="true" />
                 <AlertTitle>{submitError}</AlertTitle>
                 {submitErrors.length > 0 && (
                   <AlertDescription>

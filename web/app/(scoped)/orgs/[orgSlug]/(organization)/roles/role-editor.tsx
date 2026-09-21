@@ -12,8 +12,9 @@ import {
   PanelsTopLeft,
   Plus,
   Save,
-  ShieldCheck,
   X,
+  TriangleAlert,
+  Info,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -338,8 +339,8 @@ export function RoleEditor({ data }: { data: RoleEditorData | WorkspaceRoleEdito
           ) : null}
         </FieldGroup>
         {!workspace && role?.systemRole === "superadmin" ? (
-          <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4 md:-mx-6 md:w-[calc(100%+3rem)] md:px-6">
-            <ShieldCheck aria-hidden="true" />
+          <Alert variant="warning">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Full Organisation authorization bypass</AlertTitle>
             <AlertDescription>
               Superadmin grants every current and future Organisation and Workspace capability.
@@ -347,8 +348,8 @@ export function RoleEditor({ data }: { data: RoleEditorData | WorkspaceRoleEdito
           </Alert>
         ) : null}
         {workspace && role?.systemRole === "workspace_admin" ? (
-          <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4 md:-mx-6 md:w-[calc(100%+3rem)] md:px-6">
-            <ShieldCheck aria-hidden="true" />
+          <Alert variant="info">
+            <Info aria-hidden="true" />
             <AlertTitle>Full Workspace authorization</AlertTitle>
             <AlertDescription>
               Workspace Admin grants every current and future capability in {workspace.name}. Only a
@@ -357,10 +358,7 @@ export function RoleEditor({ data }: { data: RoleEditorData | WorkspaceRoleEdito
           </Alert>
         ) : null}
         {state.error ? (
-          <Alert
-            className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4 md:-mx-6 md:w-[calc(100%+3rem)] md:px-6"
-            variant="destructive"
-          >
+          <Alert variant="destructive">
             <CircleAlert aria-hidden="true" />
             <AlertTitle>Role not saved</AlertTitle>
             <AlertDescription>{state.error}</AlertDescription>

@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import * as z from "zod"
-import { Plus } from "lucide-react"
+import { Plus, CircleAlert } from "lucide-react"
 import type { Route } from "next"
 import { deleteSandboxFormAction } from "@/data/sandbox.actions"
 import { listSandboxesCachedQuery } from "@/data/sandbox.queries"
@@ -90,6 +90,7 @@ async function Sandboxes({
   if (result.error) {
     return (
       <Alert className="px-4 md:px-6" variant="destructive">
+        <CircleAlert aria-hidden="true" />
         <AlertDescription>{result.error.message}</AlertDescription>
       </Alert>
     )

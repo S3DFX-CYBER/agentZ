@@ -14,6 +14,7 @@ import {
   ShieldPlus,
   UsersRound,
   X,
+  CircleAlert,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -23,12 +24,11 @@ import {
   type InvitationFormState,
 } from "@/app/(scoped)/orgs/actions"
 import type { AssignmentOption, ScopedAssignmentOption } from "@/data/members"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyButton } from "@/components/ui/copy-button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -320,9 +320,10 @@ function CreateInvitationForm({
           </Field>
         </FieldGroup>
         {state.error ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{state.error}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <div className="flex justify-end">
           <Button disabled={!ready || pending} type="submit">

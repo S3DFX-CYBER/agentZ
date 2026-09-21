@@ -10,13 +10,12 @@ import {
 } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Box, Plus, Save, Wrench } from "lucide-react"
+import { Box, Plus, Save, Wrench, CircleAlert } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -191,7 +190,12 @@ function SandboxSelect({
             {loading ? "Loading sandboxes..." : "Scroll for more sandboxes"}
           </div>
         ) : null}
-        {error ? <div className="text-destructive px-2 py-1.5 text-xs">{error}</div> : null}
+        {error ? (
+          <Alert variant="destructive" className="px-2 py-1.5">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
       </SelectContent>
     </Select>
   )
@@ -221,7 +225,7 @@ export function AgentDialog({
     sandboxScope: "Organisation",
     sandboxName: initialSandboxName ?? (mode === "create" ? (sandboxes[0]?.name ?? "") : ""),
     skills: initialSkills,
-    memoryEnabled: initialMemoryEnabled,
+    memoryEnabled: actionScope.workspaceType !== "coding" && initialMemoryEnabled,
   }
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(createAgentSimpleFormSchema),
@@ -454,39 +458,42 @@ export function AgentDialog({
                 </Field>
               )}
             />
-            <Controller
-              name="memoryEnabled"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field orientation="horizontal" data-invalid={fieldState.invalid}>
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <FieldLabel htmlFor="agent-form-memory">Persistent memory</FieldLabel>
-                    <FieldDescription>
-                      Allow this Agent to save facts and journal entries across sessions.
-                    </FieldDescription>
-                    <FieldError errors={[fieldState.error]} />
-                  </div>
-                  {field.value ? <input type="hidden" name={field.name} /> : null}
-                  <Switch
-                    id="agent-form-memory"
-                    ref={field.ref}
-                    checked={field.value}
-                    onBlur={field.onBlur}
-                    onCheckedChange={field.onChange}
-                    aria-label="Enable persistent memory"
-                    aria-invalid={fieldState.invalid}
-                  />
-                </Field>
-              )}
-            />
+            {actionScope.workspaceType !== "coding" && (
+              <Controller
+                name="memoryEnabled"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <FieldLabel htmlFor="agent-form-memory">Persistent memory</FieldLabel>
+                      <FieldDescription>
+                        Allow this Agent to save facts and journal entries across sessions.
+                      </FieldDescription>
+                      <FieldError errors={[fieldState.error]} />
+                    </div>
+                    {field.value ? <input type="hidden" name={field.name} /> : null}
+                    <Switch
+                      id="agent-form-memory"
+                      ref={field.ref}
+                      checked={field.value}
+                      onBlur={field.onBlur}
+                      onCheckedChange={field.onChange}
+                      aria-label="Enable persistent memory"
+                      aria-invalid={fieldState.invalid}
+                    />
+                  </Field>
+                )}
+              />
+            )}
           </FieldGroup>
         </form>
         {form.formState.errors.root ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>
               <FieldError errors={[form.formState.errors.root]} />
             </AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

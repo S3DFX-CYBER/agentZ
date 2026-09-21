@@ -3,7 +3,7 @@
 import * as React from "react"
 import { toast } from "sonner"
 import { useTheme } from "next-themes"
-import { Monitor, Moon, Sun } from "lucide-react"
+import { Monitor, Moon, Sun, CircleAlert } from "lucide-react"
 import type { ThemePreference } from "@/data/user-preferences"
 import {
   Select,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { savePreferencesAction, type PreferencesFormState } from "./actions"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 /**
  * PreferencesForm renders autosaved user preferences.
@@ -120,9 +121,10 @@ export function PreferencesForm({
         />
       </div>
       {state.error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {state.error}
-        </p>
+        <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
       ) : null}
     </section>
   )

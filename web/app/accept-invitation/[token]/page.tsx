@@ -7,6 +7,7 @@ import { acceptInvitationAction } from "@/app/(scoped)/orgs/actions"
 import { Button } from "@/components/ui/button"
 import { getInvitationAcceptance } from "@/data/members"
 import { signInURL } from "@/lib/sign-in-redirect"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export const metadata: Metadata = {
   title: "Organisation Invitation",
@@ -114,10 +115,10 @@ async function AcceptInvitationContent({
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">{title}</h1>
         <p className="text-muted-foreground mt-4 max-w-sm leading-6 text-balance">{description}</p>
         {errorMessage ? (
-          <p className="text-destructive mt-6 flex items-center gap-2 text-sm" role="alert">
-            <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
-            {errorMessage}
-          </p>
+          <Alert variant="destructive" className="mt-6">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
         ) : null}
         {ready ? (
           <form action={acceptInvitationAction.bind(null, token)} className="mt-8 w-full">

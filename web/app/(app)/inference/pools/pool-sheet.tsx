@@ -451,8 +451,8 @@ export function PoolSheet({
             </section>
 
             {protocols.size > 1 ? (
-              <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4" variant="warning">
-                <TriangleAlert />
+              <Alert variant="warning">
+                <TriangleAlert aria-hidden="true" />
                 <AlertTitle>These models use different API formats</AlertTitle>
                 <AlertDescription>
                   Basic prompts will work, but provider-specific features may not carry over when
@@ -462,8 +462,8 @@ export function PoolSheet({
             ) : null}
 
             {submitError ? (
-              <Alert className="-mx-4 w-[calc(100%+2rem)] max-w-none px-4" variant="destructive">
-                <CircleAlert />
+              <Alert variant="destructive">
+                <CircleAlert aria-hidden="true" />
                 <AlertTitle>{submitError}</AlertTitle>
                 {submitDetails.length ? (
                   <AlertDescription>{submitDetails.join("\n")}</AlertDescription>

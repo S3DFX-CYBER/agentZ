@@ -6,6 +6,7 @@ import (
 	"go/format"
 	"io"
 	"log"
+	"maps"
 	"net/http"
 	"os"
 	"slices"
@@ -48,8 +49,9 @@ type entry struct {
 }
 
 var excluded = map[string]string{
-	"gitlab":      "GitLab Duo uses a provider-specific agentic protocol",
-	"sap-ai-core": "SAP AI Core requires service-key token and deployment discovery",
+	"github-copilot": "GitHub Copilot subscriptions are unsupported",
+	"gitlab":         "GitLab Duo uses a provider-specific agentic protocol",
+	"sap-ai-core":    "SAP AI Core requires service-key token and deployment discovery",
 }
 
 var npmKinds = map[string]string{
@@ -87,7 +89,6 @@ var providerKinds = map[string]string{
 	"google":                   "Gemini",
 	"google-vertex":            "VertexAI",
 	"google-vertex-anthropic":  "VertexAI",
-	"github-copilot":           "GitHubCopilot",
 	"openai":                   "OpenAI",
 }
 
@@ -197,8 +198,8 @@ func main() {
 			})
 		}
 	}
-	if supported != 157 {
-		log.Fatalf("catalog has %d supported providers, want 157", supported)
+	if supported != 156 {
+		log.Fatalf("catalog has %d supported providers, want 156", supported)
 	}
 	slices.SortFunc(entries, func(a, b entry) int {
 		if order := strings.Compare(a.Name, b.Name); order != 0 {
@@ -220,7 +221,16 @@ func main() {
 	for _, entry := range entries {
 		fmt.Fprintf(
 			&output,
-			"\t{\n\t\tProviderID: %q,\n\t\tName: %q,\n\t\tKind: agentzv1alpha1.InferenceProviderKind%s,\n\t\tBaseURL: %q,\n\t\tBaseURLTemplate: %q,\n\t\tAuthHeader: %q,\n\t\tAuthPrefix: %q,\n\t\tDoc: %q,\n\t},\n",
+			"\t{\n"+
+				"\t\tProviderID: %q,\n"+
+				"\t\tName: %q,\n"+
+				"\t\tKind: agentzv1alpha1.InferenceProviderKind%s,\n"+
+				"\t\tBaseURL: %q,\n"+
+				"\t\tBaseURLTemplate: %q,\n"+
+				"\t\tAuthHeader: %q,\n"+
+				"\t\tAuthPrefix: %q,\n"+
+				"\t\tDoc: %q,\n"+
+				"\t},\n",
 			entry.ProviderID,
 			entry.Name,
 			entry.Kind,
@@ -232,20 +242,12 @@ func main() {
 		)
 	}
 	output.WriteString("}\n\nvar catalogNPMKinds = map[string]agentzv1alpha1.InferenceProviderKind{\n")
-	npms := make([]string, 0, len(npmKinds))
-	for npm := range npmKinds {
-		npms = append(npms, npm)
-	}
-	slices.Sort(npms)
+	npms := slices.Sorted(maps.Keys(npmKinds))
 	for _, npm := range npms {
 		fmt.Fprintf(&output, "\t%q: agentzv1alpha1.InferenceProviderKind%s,\n", npm, npmKinds[npm])
 	}
 	output.WriteString("}\n\nvar catalogProviderKinds = map[string]agentzv1alpha1.InferenceProviderKind{\n")
-	ids := make([]string, 0, len(providerKinds))
-	for id := range providerKinds {
-		ids = append(ids, id)
-	}
-	slices.Sort(ids)
+	ids := slices.Sorted(maps.Keys(providerKinds))
 	for _, id := range ids {
 		fmt.Fprintf(&output, "\t%q: agentzv1alpha1.InferenceProviderKind%s,\n", id, providerKinds[id])
 	}

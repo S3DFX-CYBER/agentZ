@@ -6,18 +6,17 @@ import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
 import QRCode from "react-qr-code"
 import { z } from "zod"
-import { ArrowRight, Download, ShieldCheck, ShieldOff, XIcon } from "lucide-react"
+import { ArrowRight, Download, ShieldCheck, ShieldOff, XIcon, CircleAlert } from "lucide-react"
 import { toast } from "sonner"
 import type { AuthError, SocialProvider } from "@/app/(auth)/shared"
 import { authErrorMessages } from "@/app/(auth)/shared"
 import { reauthenticateWithGithub, reauthenticateWithGoogle } from "./actions"
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyButton } from "@/components/ui/copy-button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -317,7 +316,12 @@ export function TwoFactorSettings({
           />
         </div>
       </div>
-      {!open && error ? <FieldError>{error}</FieldError> : null}
+      {!open && error ? (
+        <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <Dialog
         open={open}
         onOpenChange={(nextOpen) => {
@@ -413,9 +417,10 @@ function SetupDialog({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="px-4 pb-4">
           {error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{error}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <form
             className="flex flex-col gap-6"
@@ -535,7 +540,7 @@ function ReauthDialog({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Confirm it&apos;s you</DialogTitle>
+        <DialogTitle>Confirm it is you</DialogTitle>
         <DialogDescription>
           Confirm your identity before {action === "enable" ? "enabling" : "disabling"} two-factor
           authentication.
@@ -573,9 +578,10 @@ function ReauthDialog({
             </Field>
           </FieldGroup>
           {error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{error}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>
@@ -626,9 +632,10 @@ function DisableDialog({
         </DialogDescription>
       </DialogHeader>
       {error ? (
-        <DialogAlert variant="destructive">
+        <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
           <AlertDescription>{error}</AlertDescription>
-        </DialogAlert>
+        </Alert>
       ) : null}
       <DialogFooter>
         <DialogClose asChild>

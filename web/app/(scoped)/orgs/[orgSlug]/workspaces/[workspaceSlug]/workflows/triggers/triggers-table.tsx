@@ -10,7 +10,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { MoreHorizontal, Pencil, Play, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Play, Trash2, CircleAlert } from "lucide-react"
 import type {
   SortOrderQuery,
   WorkflowSchedule,
@@ -19,11 +19,10 @@ import type {
 } from "@/lib/gateway/client"
 import { TokenTablePagination } from "@/components/table-pagination"
 import { AdminDataGrid, type AdminColumnLayout } from "@/components/admin-data-grid"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -370,9 +369,10 @@ function RunScheduleDialog({
           </DialogDescription>
         </DialogHeader>
         {state.error ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{state.error.message}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>
@@ -433,9 +433,10 @@ function DeleteScheduleDialog({
           </DialogDescription>
         </DialogHeader>
         {state.error ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{state.error.message}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

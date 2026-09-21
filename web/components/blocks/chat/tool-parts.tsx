@@ -18,7 +18,6 @@ import {
   BrainIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CircleAlertIcon,
   ExternalLinkIcon,
   FolderIcon,
   FolderSearch2Icon,
@@ -28,10 +27,12 @@ import {
   SearchIcon,
   TerminalSquareIcon,
   WrenchIcon,
+  CircleAlert,
 } from "lucide-react"
 import type { BundledLanguage } from "shiki"
 import { useState } from "react"
 import * as z from "zod"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 type ToolProps = {
   agentName: string
@@ -446,17 +447,17 @@ function Diagnostics({ items }: { items: Diagnostic[] }) {
   if (items.length === 0) return null
 
   return (
-    <div className="space-y-1">
+    <div className="flex flex-col gap-1">
       {items.slice(0, 3).map((item, index) => (
-        <div className="text-destructive flex gap-1.5 text-sm" key={`${item.message}-${index}`}>
-          <CircleAlertIcon className="mt-0.5 size-3 shrink-0" />
-          <div className="min-w-0">
+        <Alert variant="destructive" key={`${item.message}-${index}`}>
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>
             <span className="font-mono text-xs">
               [{item.range.start.line + 1}:{item.range.start.character + 1}]
             </span>{" "}
             <span>{item.message}</span>
-          </div>
-        </div>
+          </AlertDescription>
+        </Alert>
       ))}
     </div>
   )

@@ -14,6 +14,7 @@ import { getDB, schema } from "@/db"
 import { getAuth } from "@/lib/auth"
 import { getEnv } from "@/lib/env"
 import { searchParamStringSchema, type SearchParamStringInput } from "@/lib/search-params"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export const metadata = { title: "Join organisation" }
 
@@ -233,13 +234,12 @@ async function JoinOrganizationContent({
         </p>
 
         {errorMessage ? (
-          <div
-            className="border-destructive/20 bg-destructive/5 text-destructive mt-6 flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left text-sm"
-            role="alert"
-          >
-            <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <p>{errorMessage}</p>
-          </div>
+          <Alert variant="destructive" className="mt-6">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>
+              <p>{errorMessage}</p>
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         {available ? (

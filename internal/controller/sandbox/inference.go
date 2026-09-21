@@ -49,8 +49,12 @@ func (r *Reconciler) reconcileInference(ctx context.Context, sandbox *agentzv1al
 			if !pool.DeletionTimestamp.IsZero() {
 				return false, fmt.Errorf("inference pool %q is terminating", ref.Model)
 			}
-			isAvailable := pool.Status.State == agentzv1alpha1.InferencePoolStateReady || pool.Status.State == agentzv1alpha1.InferencePoolStatePartiallyDegraded
-			ready = ready && isAvailable
+			switch pool.Status.State {
+			case agentzv1alpha1.InferencePoolStateReady,
+				agentzv1alpha1.InferencePoolStatePartiallyDegraded:
+			default:
+				ready = false
+			}
 			targets = append(
 				targets,
 				inference.SandboxTarget{
@@ -122,8 +126,7 @@ func (r *Reconciler) reconcileInference(ctx context.Context, sandbox *agentzv1al
 				Path:             inference.SandboxProviderPath(sandbox.Name, provider.Name),
 				Models:           models[providerKey],
 				Labels:           map[string]string{inference.ProviderLabel: provider.Name},
-				ExtAuth: kind == agentzv1alpha1.InferenceProviderKindOpenAICodex ||
-					kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot,
+				ExtAuth:          kind == agentzv1alpha1.InferenceProviderKindOpenAICodex,
 			},
 		)
 	}
@@ -327,13 +330,14 @@ func (r *Reconciler) reconcileInferenceGateway(ctx context.Context, namespace st
 		}
 		return r.deleteAgentgatewayParameters(ctx, namespace, inference.ParametersName)
 	}
-	if err := r.reconcileTraceBackend(ctx, namespace, inferenceTraceBackendName, owners); err != nil {
+	err := r.reconcileTraceBackend(ctx, namespace, inferenceTraceBackendName, owners)
+	if err != nil {
 		return err
 	}
 	tracePolicy := &agentgatewayv1alpha1.AgentgatewayPolicy{
 		ObjectMeta: metav1.ObjectMeta{Name: inferenceTracePolicyName, Namespace: namespace},
 	}
-	_, err := ctrlutil.CreateOrPatch(
+	_, err = ctrlutil.CreateOrPatch(
 		ctx,
 		r.Client,
 		tracePolicy,
@@ -437,9 +441,7 @@ func (r *Reconciler) reconcileInferenceGateway(ctx context.Context, namespace st
 			return fmt.Errorf("get inference policy provider: %w", err)
 		}
 		kind := provider.Spec.Kind
-		isCodex := kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if (isCodex || isCopilot) && provider.Namespace != namespace {
+		if kind == agentzv1alpha1.InferenceProviderKindOpenAICodex && provider.Namespace != namespace {
 			extAuthNamespaces = append(extAuthNamespaces, provider.Namespace)
 		}
 		target, err := inference.RenderProviderTarget(provider, "")

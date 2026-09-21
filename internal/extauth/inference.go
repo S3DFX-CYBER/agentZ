@@ -111,8 +111,7 @@ func (s *Service) evaluateInference(ctx context.Context, checkAttrs *authv3.Attr
 			slog.LevelError,
 		), attrs
 	}
-	isSubscription := provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex || provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-	if !isSubscription {
+	if provider.Spec.Kind != agentzv1alpha1.InferenceProviderKindOpenAICodex {
 		if attrs.pool == "" {
 			return denyDecision(
 				codes.Unavailable,
@@ -141,7 +140,16 @@ func (s *Service) evaluateInference(ctx context.Context, checkAttrs *authv3.Attr
 			slog.LevelError,
 		), attrs
 	}
-	return allowDecision(inferenceInjection(record)), attrs
+	return allowDecision(injectedRequest{
+		headers: []*corev3.HeaderValueOption{
+			overwriteHeader("authorization", "Bearer "+record.Token.AccessToken),
+			overwriteHeader("chatgpt-account-id", record.AccountID),
+		},
+		headersToRemove: []string{
+			inference.SandboxHeader,
+			inference.SandboxNamespaceHeader,
+		},
+	}), attrs
 }
 
 func (s *Service) authorizeInferenceTarget(ctx context.Context, providerNamespace, sandboxNamespace, sandboxName, providerName, poolName string) error {
@@ -290,30 +298,6 @@ func (s *Service) resolveInferenceSubscription(ctx context.Context, provider *ag
 		return inference.SubscriptionRecord{}, true, writeErr
 	}
 	return record, true, nil
-}
-
-func inferenceInjection(record inference.SubscriptionRecord) injectedRequest {
-	headers := []*corev3.HeaderValueOption{
-		overwriteHeader("authorization", "Bearer "+record.Token.AccessToken),
-	}
-	if record.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex {
-		headers = append(headers, overwriteHeader("chatgpt-account-id", record.AccountID))
-	}
-	if record.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot {
-		headers = append(
-			headers,
-			overwriteHeader("user-agent", "opencode/1.17.18"),
-			overwriteHeader("x-github-api-version", inference.GitHubCopilotAPIVersion),
-			overwriteHeader("openai-intent", "conversation-edits"),
-		)
-	}
-	return injectedRequest{
-		headers: headers,
-		headersToRemove: []string{
-			inference.SandboxHeader,
-			inference.SandboxNamespaceHeader,
-		},
-	}
 }
 
 func overwriteHeader(name, value string) *corev3.HeaderValueOption {

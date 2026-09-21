@@ -15,6 +15,7 @@ import {
   Trash2,
   TriangleAlert,
   Upload,
+  CircleAlert,
 } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
 import * as z from "zod"
@@ -28,7 +29,6 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -433,6 +433,7 @@ export function SkillsClient({
       </div>
       {error ? (
         <Alert className="my-4 px-4 md:px-6" variant="destructive">
+          <CircleAlert aria-hidden="true" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
@@ -655,9 +656,10 @@ function EditSkillDialog({
             </Field>
           </FieldGroup>
           {(error ?? versionsQuery.error?.message) ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{error ?? versionsQuery.error?.message}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>
@@ -703,14 +705,14 @@ function DeleteDialog({
           <DialogDescription>This permanently deletes the selected skill.</DialogDescription>
         </DialogHeader>
         {hasRefs ? (
-          <DialogAlert variant="warning">
-            <TriangleAlert />
+          <Alert variant="warning">
+            <TriangleAlert aria-hidden="true" />
             <AlertDescription>
               Remove the selected skills from these consumers before deleting them.
               {agentRefs.size > 0 ? <p>Agents: {Array.from(agentRefs).join(", ")}</p> : null}
               {sandboxRefs.size > 0 ? <p>Sandboxes: {Array.from(sandboxRefs).join(", ")}</p> : null}
             </AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

@@ -14,6 +14,7 @@ import {
   Shield,
   UsersRound,
   X,
+  TriangleAlert,
 } from "lucide-react"
 import { socialAdmissionAction, type SocialAdmissionFormState } from "@/app/(scoped)/orgs/actions"
 import type { SocialAdmission } from "@/data/members"
@@ -190,21 +191,15 @@ export function SocialAdmissionForm({ data, orgSlug }: { data: SocialAdmission; 
           />
         </Field>
         {state.error ? (
-          <Alert
-            className="-mx-4 w-[100cqw] max-w-none rounded-none border-x-0 px-4 md:-mx-6 md:px-6"
-            variant="destructive"
-          >
+          <Alert variant="destructive">
             <CircleAlert aria-hidden="true" />
             <AlertTitle>Policy not saved</AlertTitle>
             <AlertDescription>{state.error}</AlertDescription>
           </Alert>
         ) : null}
         {validationVisible && enabled && !hasDefaultAccess ? (
-          <Alert
-            className="-mx-4 w-[100cqw] max-w-none rounded-none border-x-0 px-4 md:-mx-6 md:px-6"
-            variant="warning"
-          >
-            <CircleAlert aria-hidden="true" />
+          <Alert variant="warning" role="alert">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Default access required</AlertTitle>
             <AlertDescription>
               Select at least one default role or team before saving Social Sign Up.
@@ -212,11 +207,8 @@ export function SocialAdmissionForm({ data, orgSlug }: { data: SocialAdmission; 
           </Alert>
         ) : null}
         {validationVisible && enabled && !hasProvider ? (
-          <Alert
-            className="-mx-4 w-[100cqw] max-w-none rounded-none border-x-0 px-4 md:-mx-6 md:px-6"
-            variant="warning"
-          >
-            <CircleAlert aria-hidden="true" />
+          <Alert variant="warning" role="alert">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Sign-in provider required</AlertTitle>
             <AlertDescription>Enable Google or GitHub before saving.</AlertDescription>
           </Alert>
@@ -419,8 +411,6 @@ export function SocialAdmissionForm({ data, orgSlug }: { data: SocialAdmission; 
               ) : null}
             </div>
 
-            <Separator className="-mx-4 w-[100cqw] md:-mx-6" />
-
             <div className="grid gap-8 @2xl:grid-cols-[21rem_minmax(0,1fr)]">
               <ProviderHeading
                 checked={githubEnabled}
@@ -557,10 +547,7 @@ export function SocialAdmissionForm({ data, orgSlug }: { data: SocialAdmission; 
             </div>
           </section>
 
-          <Alert
-            className="-mx-4 w-[100cqw] max-w-none rounded-none border-x-0 px-4 md:-mx-6 md:px-6"
-            variant="info"
-          >
+          <Alert variant="info">
             <Info aria-hidden="true" />
             <AlertTitle>Membership lifecycle</AlertTitle>
             <AlertDescription>

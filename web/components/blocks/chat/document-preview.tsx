@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { renderAsync } from "docx-preview"
-import { FileText } from "lucide-react"
+import { CircleAlert } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function DocumentPreview({ file }: { file: Blob }): React.JSX.Element {
   const container = React.useRef<HTMLDivElement>(null)
@@ -51,10 +52,10 @@ export function DocumentPreview({ file }: { file: Blob }): React.JSX.Element {
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-3 text-sm">
-          <FileText className="size-8" />
-          This document could not be rendered
-        </div>
+        <Alert variant="destructive" className="p-6">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>This document could not be rendered</AlertDescription>
+        </Alert>
       ) : null}
     </div>
   )

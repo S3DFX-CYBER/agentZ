@@ -2,15 +2,21 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { CheckCircle2, CircleDashed, MoreHorizontal, Trash2, XCircle } from "lucide-react"
+import {
+  CheckCircle2,
+  CircleDashed,
+  MoreHorizontal,
+  Trash2,
+  XCircle,
+  CircleAlert,
+} from "lucide-react"
 import type { SecretListItem, SecretState } from "@/lib/gateway/client"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { RelativeDateTime } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -224,9 +230,10 @@ function DeleteSecretDialog({
           <DialogDescription>Deleting this secret removes it permanently.</DialogDescription>
         </DialogHeader>
         {state.error ? (
-          <DialogAlert variant="destructive">
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertDescription>{state.error.message}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>

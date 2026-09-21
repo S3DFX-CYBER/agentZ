@@ -4,16 +4,15 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { BotIcon, CheckIcon, Clock3, KeyRound, Webhook } from "lucide-react"
+import { BotIcon, CheckIcon, Clock3, KeyRound, Webhook, CircleAlert } from "lucide-react"
 import { toast } from "sonner"
 import { createAPIKeyFormSchema, type CreateAPIKeyFormValues } from "@/data/api-key.schema"
 import type { CreateAPIKeyFormState } from "@/data/types"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyButton } from "@/components/ui/copy-button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -378,9 +377,10 @@ function CreateAPIKeyDialog({
             </FieldGroup>
           </form>
           {state.error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{state.error.message}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>

@@ -4,7 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch, type Control, type Resolver } from "react-hook-form"
-import { CalendarCheck, ListFilter, MinusCircle, Workflow } from "lucide-react"
+import { CalendarCheck, ListFilter, MinusCircle, Workflow, CircleAlert } from "lucide-react"
 import * as z from "zod"
 import type {
   JsonValue,
@@ -590,10 +590,8 @@ export function ScheduleSheet(props: ScheduleSheetProps) {
             ) : null}
           </FieldGroup>
           {generalErrorMessage ? (
-            <Alert
-              className="-mx-4 w-[calc(100%+2rem)] max-w-none shrink-0 px-4"
-              variant="destructive"
-            >
+            <Alert className="shrink-0" variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{generalErrorMessage}</AlertDescription>
             </Alert>
           ) : null}

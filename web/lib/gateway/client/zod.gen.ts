@@ -6,7 +6,7 @@ export const zChatSessionKind = z.enum(["chat", "workflow_run"])
 
 export const zChatSessionStatus = z.enum(["idle", "busy", "retry"])
 
-export const zChatSessionGroupBy = z.enum(["none", "agent", "status", "date"])
+export const zChatSessionGroupBy = z.enum(["none", "agent", "status", "date", "project"])
 
 export const zChatSessionDateBucket = z.enum(["today", "yesterday", "previous_7_days", "older"])
 
@@ -15,6 +15,47 @@ export const zChatSessionParticipant = z.object({
   name: z.string(),
   email: z.email(),
   image: z.string().nullable(),
+})
+
+export const zChatAttachment = z.object({
+  id: z.string().min(1),
+  filename: z.string().min(1),
+  mediaType: z.string().min(1),
+  path: z.string().min(1),
+  size: z.int().gte(0).lte(8388608),
+})
+
+export const zChatInputContent = z.object({
+  text: z.string().max(1000000),
+  attachments: z.array(zChatAttachment).max(3),
+  model: z.object({
+    modelID: z.string().min(1),
+    providerID: z.string().min(1),
+  }),
+  agent: z.string().optional(),
+  variant: z.string().optional(),
+})
+
+export const zChatInputRequest = z.object({
+  id: z.uuid(),
+  delivery: z.enum(["steer", "queue"]),
+  content: zChatInputContent,
+})
+
+export const zChatInputState = z.enum([
+  "queued",
+  "sending",
+  "delivered",
+  "failed",
+  "recovered",
+  "removed",
+])
+
+export const zChatInputUpdate = z.object({
+  revision: z.coerce.bigint().gte(BigInt(1)).max(BigInt("9223372036854775807"), {
+    error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+  }),
+  action: z.enum(["remove", "retry"]),
 })
 
 export const zWatchChatSessionsEvent = z.object({
@@ -171,6 +212,30 @@ export const zResourceActor = z.object({
   image: z.string().nullable(),
 })
 
+export const zChatInput = z.object({
+  id: z.uuid(),
+  author: zResourceActor,
+  delivery: z.enum(["steer", "queue"]),
+  content: zChatInputContent,
+  state: zChatInputState,
+  revision: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+  created_at: z.iso.datetime(),
+  message_id: z.string().optional(),
+  error: z.string(),
+})
+
+export const zChatInputs = z.object({
+  items: z.array(zChatInput),
+  stopping: z.boolean(),
+})
+
 export const zTenant = z.object({
   organization_id: z.string(),
   namespace: z.string(),
@@ -185,6 +250,8 @@ export const zTenant = z.object({
 })
 
 export const zWorkspaceState = z.enum(["provisioning", "ready", "failed", "deleting"])
+
+export const zWorkspaceType = z.enum(["general", "coding"])
 
 export const zAgentWorkspaceCapabilities = z.object({
   author: z.boolean(),
@@ -203,6 +270,7 @@ export const zWorkspaceCapabilities = z.object({
 })
 
 export const zWorkspace = z.object({
+  type: zWorkspaceType,
   id: z.string(),
   name: z.string(),
   slug: z.string(),
@@ -242,6 +310,7 @@ export const zSelectedOrganizationResources = z.object({
 })
 
 export const zCreateWorkspaceRequest = z.object({
+  type: zWorkspaceType.optional(),
   name: z
     .string()
     .min(1)
@@ -305,6 +374,7 @@ export const zAgentName = z
   .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/)
 
 export const zChatSession = z.object({
+  project_id: z.string().optional(),
   agent_name: zAgentName,
   session_id: z.string(),
   title: z.string(),
@@ -313,27 +383,6 @@ export const zChatSession = z.object({
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
   participants: z.array(zChatSessionParticipant),
-})
-
-export const zChatSessionGroup = z.object({
-  group_by: zChatSessionGroupBy,
-  key: z.string(),
-  label: z.string(),
-  agent_name: zAgentName.optional(),
-  status: zChatSessionStatus.optional(),
-  date_bucket: zChatSessionDateBucket.optional(),
-  contains_active: z.boolean(),
-  sessions: z.array(zChatSession),
-  has_next_page: z.boolean(),
-  next_page_token: z.string(),
-})
-
-export const zListChatSessionsResponse = z.object({
-  sessions: z.array(zChatSession),
-  groups: z.array(zChatSessionGroup),
-  participant_filters: z.array(zChatSessionParticipant),
-  has_next_page: z.boolean(),
-  next_page_token: z.string(),
 })
 
 export const zChatSessionPreference = z.object({
@@ -1465,7 +1514,6 @@ export const zInferenceProviderKind = z.enum([
   "OpenAICodex",
   "Anthropic",
   "Gemini",
-  "GitHubCopilot",
   "OpenAICompatible",
   "AnthropicCompatible",
   "Bedrock",
@@ -1603,7 +1651,7 @@ export const zInferenceProviderOAuthCredentials = z.object({
 })
 
 export const zCreateInferenceProviderOAuthTicketRequest = z.object({
-  kind: z.enum(["OpenAICodex", "GitHubCopilot"]),
+  kind: z.enum(["OpenAICodex"]),
 })
 
 export const zInferenceProviderReadFields = z.object({
@@ -1641,13 +1689,6 @@ export const zGeminiInferenceProviderWrite = z.object({
   models: z.array(zInferenceModel).min(1).max(500),
   kind: z.enum(["Gemini"]),
   gemini: zGeminiProviderConfig,
-})
-
-export const zGitHubCopilotInferenceProviderWrite = z.object({
-  catalog_provider: z.enum(["github-copilot"]),
-  display_name: z.string().min(1).max(128),
-  models: z.array(zInferenceModel).min(1).max(500),
-  kind: z.enum(["GitHubCopilot"]),
 })
 
 export const zVertexAiInferenceProviderWrite = z.object({
@@ -1695,7 +1736,6 @@ export const zInferenceProviderWriteDiscriminator = z.discriminatedUnion("kind",
   zOpenAiCodexInferenceProviderWrite.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderWrite.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderWrite.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderWrite.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderWrite.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderWrite.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderWrite.extend({ kind: z.literal("Azure") }),
@@ -1720,10 +1760,6 @@ export const zAnthropicInferenceProviderRead = z.object({
 export const zGeminiInferenceProviderRead = z.object({
   kind: z.enum(["Gemini"]),
   gemini: zGeminiProviderConfig,
-})
-
-export const zGitHubCopilotInferenceProviderRead = z.object({
-  kind: z.enum(["GitHubCopilot"]),
 })
 
 export const zVertexAiInferenceProviderRead = z.object({
@@ -1756,7 +1792,6 @@ export const zInferenceProviderReadDiscriminator = z.discriminatedUnion("kind", 
   zOpenAiCodexInferenceProviderRead.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderRead.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderRead.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderRead.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderRead.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderRead.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderRead.extend({ kind: z.literal("Azure") }),
@@ -2399,6 +2434,344 @@ export const zDashboardTablePage = z.object({
   error: zDashboardWidgetError.optional(),
 })
 
+export const zCodingProject = z.object({
+  last_agent_name: z.string().optional(),
+  deleting: z.boolean(),
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  name: z.string(),
+  repository_id: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+  repository: z.string(),
+  default_branch: z.string(),
+  created_at: z.iso.datetime(),
+})
+
+export const zChatSessionGroup = z.object({
+  project: zCodingProject.optional(),
+  group_by: zChatSessionGroupBy,
+  key: z.string(),
+  label: z.string(),
+  agent_name: zAgentName.optional(),
+  status: zChatSessionStatus.optional(),
+  date_bucket: zChatSessionDateBucket.optional(),
+  contains_active: z.boolean(),
+  sessions: z.array(zChatSession),
+  has_next_page: z.boolean(),
+  next_page_token: z.string(),
+})
+
+export const zListChatSessionsResponse = z.object({
+  sessions: z.array(zChatSession),
+  groups: z.array(zChatSessionGroup),
+  participant_filters: z.array(zChatSessionParticipant),
+  has_next_page: z.boolean(),
+  next_page_token: z.string(),
+})
+
+export const zCreateCodingProjectRequest = z.object({
+  name: z
+    .string()
+    .min(1)
+    .max(80)
+    .regex(/.*\S.*/),
+  repository_id: z.coerce.bigint().gte(BigInt(1)).max(BigInt("9223372036854775807"), {
+    error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+  }),
+})
+
+export const zCodingWorktree = z.object({
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  project_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  agent_name: z.string(),
+  directory: z.string(),
+  branch: z.string(),
+  ready: z.boolean(),
+  shared: z.boolean(),
+})
+
+export const zCodingThread = z.object({
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  session_id: z.string(),
+  repository_id: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+  repository: z.string(),
+  worktree: zCodingWorktree,
+})
+
+export const zCodingProjectAgent = z.object({
+  name: z.string(),
+  delete_disabled_reason: z.string().optional(),
+})
+
+export const zCodingProjectDetail = z.object({
+  project: zCodingProject,
+  agents: z.array(zCodingProjectAgent),
+  worktrees: z.array(zCodingWorktree),
+  threads: z.array(zCodingThread),
+})
+
+export const zPrepareCodingCheckoutRequest = z.object({
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  project_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  agent_name: z.string().min(1).max(32),
+  worktree_id: z
+    .string()
+    .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+    .optional(),
+  main_checkout: z.boolean().optional().default(false),
+  base_ref: z.string().min(1).max(1024).optional(),
+})
+
+/**
+ * Generate source-control text using the explicit request model, otherwise the sandbox small model, otherwise the thread model. A configured model that fails does not fall back to another model.
+ */
+export const zCodingTextRequest = z.object({
+  purpose: z.enum(["branch", "commit", "pr"]),
+  text: z.string().max(48000).optional(),
+  expected_tree: z
+    .string()
+    .regex(/^[a-f0-9]{40,64}$/)
+    .optional(),
+  model: z
+    .object({
+      modelID: z.string().min(1),
+      providerID: z.string().min(1),
+    })
+    .optional(),
+})
+
+export const zCodingPullRequestText = z.object({
+  title: z.string().min(1).max(256),
+  body: z.string().min(1).max(20000),
+})
+
+export const zCodingTextSuggestion = z.object({
+  text: z.string().min(1).max(20000),
+  pull_request: zCodingPullRequestText.optional(),
+})
+
+export const zCodingGitFile = z.object({
+  path: z.string(),
+  index: z.string(),
+  worktree: z.string(),
+  previous_path: z.string().optional(),
+  conflict: z.boolean(),
+})
+
+export const zCodingGitComparison = z.enum(["all", "unstaged", "staged"])
+
+export const zCodingGitRequest = z.object({
+  operation: z.enum([
+    "discover",
+    "status",
+    "diff",
+    "stage",
+    "unstage",
+    "stashes",
+    "stash_create",
+    "stash_apply",
+    "stash_pop",
+    "stash_drop",
+    "export",
+    "import",
+    "apply_commit",
+    "checkout",
+    "create_branch",
+    "prepare_commit",
+    "rename",
+    "remove",
+  ]),
+  comparison: zCodingGitComparison.optional(),
+  fresh: z.boolean().optional(),
+  revision: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
+  hunk: z.int().gte(0).optional(),
+  stash: z
+    .string()
+    .regex(/^[a-f0-9]{40,64}$/)
+    .optional(),
+  message: z.string().max(1000).optional(),
+  restore_index: z.boolean().optional(),
+  paths: z.array(z.string().min(1).max(4096)).max(1000).optional(),
+  expected_tree: z
+    .string()
+    .regex(/^[a-f0-9]{40,64}$/)
+    .optional(),
+  expected_head: z
+    .string()
+    .regex(/^[a-f0-9]{40,64}$/)
+    .optional(),
+  ref: z.string().max(255).optional(),
+  bundle: z.string().max(89478488).optional(),
+})
+
+export const zCodingGitPatch = z.object({
+  path: z.string(),
+  patch: z.string(),
+  revision: z.string(),
+  can_stage_hunks: z.boolean(),
+  binary: z.boolean(),
+})
+
+export const zCodingGitStash = z.object({
+  oid: z.string(),
+  reference: z.string(),
+  message: z.string(),
+  created_at: z.iso.datetime(),
+})
+
+export const zCodingRef = z.object({
+  ref: z.string(),
+  name: z.string(),
+  head: z.string(),
+  remote: z.boolean(),
+  worktree: z.string().optional(),
+  current: z.boolean(),
+  default: z.boolean(),
+  committed_at: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+})
+
+export const zCodingDiscoveredWorktree = z.object({
+  directory: z.string(),
+  branch: z.string(),
+  head: z.string(),
+  managed_id: z.string().optional(),
+  available: z.boolean(),
+  reason: z.string().optional(),
+  locked: z.boolean(),
+})
+
+export const zCodingRepositorySnapshot = z.object({
+  refs: z.array(zCodingRef),
+  worktrees: z.array(zCodingDiscoveredWorktree),
+  revision: z.string(),
+  updated_at: z.iso.datetime().optional(),
+  refreshing: z.boolean(),
+  error: z.string().optional(),
+  total_count: z.int(),
+  next_cursor: z.string().optional(),
+})
+
+export const zAdoptCodingWorktreeRequest = z.object({
+  agent_name: z.string().min(1).max(32),
+  directory: z.string().min(1).max(4096),
+})
+
+export const zCodingPullRequest = z.object({
+  number: z.int(),
+  url: z.string(),
+})
+
+export const zCodingGitResult = z.object({
+  head: z.string(),
+  branch: z.string(),
+  default_branch: z.string(),
+  remote_head: z.string(),
+  ahead: z.int(),
+  behind: z.int(),
+  ahead_of_default: z.int(),
+  files: z.array(zCodingGitFile),
+  revision: z.string(),
+  patches: z.array(zCodingGitPatch).optional(),
+  stashes: z.array(zCodingGitStash).optional(),
+  bundle: z.string().optional(),
+  tree: z.string().optional(),
+  repository: zCodingRepositorySnapshot.optional(),
+  pull_request: zCodingPullRequest.optional(),
+  remote_error: z.string().optional(),
+})
+
+export const zCodingAction = z.enum([
+  "commit",
+  "push",
+  "pull",
+  "fetch",
+  "create_pr",
+  "commit_push",
+  "commit_push_pr",
+  "name_branch",
+])
+
+export const zCodingOperationRequest = z.object({
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+  agent_name: z.string().min(1).max(32),
+  session_id: z.string().min(1),
+  action: zCodingAction,
+  branch: z.string(),
+  expected_head: z.string().regex(/^[a-f0-9]{40,64}$/),
+  revision: z.string().regex(/^[a-f0-9]{64}$/),
+  expected_tree: z
+    .string()
+    .regex(/^[a-f0-9]{40,64}$/)
+    .optional(),
+  message: z.string().max(20000).optional(),
+  feature_branch: z.boolean().optional().default(false),
+  text: z.string().min(1).max(16000).optional(),
+  model: z
+    .object({
+      modelID: z.string().min(1),
+      providerID: z.string().min(1),
+    })
+    .optional(),
+  paths: z.array(z.string().min(1).max(4096)).max(1000).optional(),
+})
+
+export const zCodingOperation = z.object({
+  id: z.string(),
+  project_id: z.string(),
+  worktree_id: z.string(),
+  agent_name: z.string(),
+  session_id: z.string(),
+  action: zCodingAction,
+  state: z.enum(["queued", "running", "succeeded", "failed", "interrupted"]),
+  stage: z.string(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+  commit: z.string().optional(),
+  pushed: z.boolean(),
+  pull_request: zCodingPullRequest.optional(),
+  error: z.string().optional(),
+})
+
+export const zCodingRepositoryItem = z.object({
+  id: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+  name: z.string(),
+  private: z.boolean(),
+})
+
+export const zCodingRepositoryPage = z.object({
+  repositories: z.array(zCodingRepositoryItem),
+  next_page: z.int().optional(),
+})
+
 export const zJsonValueWritable = z
   .union([
     z.boolean(),
@@ -2417,7 +2790,7 @@ export const zWorkflowRunInputsWritable = zJsonValueWritable
 export const zJsonObjectWritable = z.record(z.string(), zJsonValueWritable)
 
 export const zCreateInferenceProviderOAuthTicketRequestWritable = z.object({
-  kind: z.enum(["OpenAICodex", "GitHubCopilot"]),
+  kind: z.enum(["OpenAICodex"]),
   credentials: zInferenceProviderOAuthCredentials,
 })
 
@@ -2498,7 +2871,6 @@ export const zInferenceProviderWriteDiscriminatorWritable = z.discriminatedUnion
   zOpenAiCodexInferenceProviderWrite.extend({ kind: z.literal("OpenAICodex") }),
   zAnthropicInferenceProviderWriteWritable.extend({ kind: z.literal("Anthropic") }),
   zGeminiInferenceProviderWriteWritable.extend({ kind: z.literal("Gemini") }),
-  zGitHubCopilotInferenceProviderWrite.extend({ kind: z.literal("GitHubCopilot") }),
   zVertexAiInferenceProviderWriteWritable.extend({ kind: z.literal("VertexAI") }),
   zBedrockInferenceProviderWriteWritable.extend({ kind: z.literal("Bedrock") }),
   zAzureInferenceProviderWriteWritable.extend({ kind: z.literal("Azure") }),
@@ -2796,6 +3168,96 @@ export const zDashboardWidgetNamePath = zDashboardWidgetName
 export const zIdempotencyKeyHeader = z.string().min(1).max(128)
 
 /**
+ * The actor's projects.
+ */
+export const zListCodingProjectsResponse = z.array(zCodingProject)
+
+/**
+ * Created project.
+ */
+export const zCreateCodingProjectResponse = zCodingProject
+
+/**
+ * Project, conversations, and all managed checkout files deleted.
+ */
+export const zDeleteCodingProjectResponse = z.void()
+
+/**
+ * Project and checkouts.
+ */
+export const zGetCodingProjectResponse = zCodingProjectDetail
+
+/**
+ * Renamed.
+ */
+export const zRenameCodingProjectResponse = z.void()
+
+/**
+ * Updated preference.
+ */
+export const zUpdateCodingProjectPreferenceResponse = z.void()
+
+/**
+ * Prepared checkout.
+ */
+export const zPrepareCodingCheckoutResponse = zCodingWorktree
+
+/**
+ * Thread checkout.
+ */
+export const zGetCodingThreadResponse = zCodingThread
+
+/**
+ * Generated source-control text.
+ */
+export const zSuggestCodingTextResponse = zCodingTextSuggestion
+
+/**
+ * Git result.
+ */
+export const zRunCodingGitResponse = zCodingGitResult
+
+/**
+ * Coding result.
+ */
+export const zListCodingRepositoriesResponse = zCodingRepositoryPage
+
+/**
+ * Coding result.
+ */
+export const zListCodingRefsResponse = zCodingRepositorySnapshot
+
+/**
+ * Coding result.
+ */
+export const zRefreshCodingRepositoryResponse = zCodingRepositorySnapshot
+
+/**
+ * Coding result.
+ */
+export const zAdoptCodingWorktreeResponse = zCodingWorktree
+
+/**
+ * Active and recent operations owned by the actor.
+ */
+export const zListCodingOperationsResponse = z.array(zCodingOperation)
+
+/**
+ * Coding result.
+ */
+export const zStartCodingOperationResponse = zCodingOperation
+
+/**
+ * Coding result.
+ */
+export const zGetCodingOperationResponse = zCodingOperation
+
+/**
+ * Invalidation notifications; read current state on every connection.
+ */
+export const zWatchCodingResponse = zWatchChatSessionsEvent
+
+/**
  * Paginated chat sessions and available participant filters.
  */
 export const zListChatSessionsResponse2 = zListChatSessionsResponse
@@ -2804,6 +3266,21 @@ export const zListChatSessionsResponse2 = zListChatSessionsResponse
  * Stream of chat inbox invalidations.
  */
 export const zWatchChatSessionsResponse = zWatchChatSessionsEvent
+
+/**
+ * Read queued messages and your recovered drafts.
+ */
+export const zListChatInputsResponse = zChatInputs
+
+/**
+ * Persist a message for steering or queued delivery.
+ */
+export const zSubmitChatInputResponse = zChatInput
+
+/**
+ * Remove or retry your queued message.
+ */
+export const zUpdateChatInputResponse = zChatInput
 
 /**
  * Workspace-scoped preferences for the current user.

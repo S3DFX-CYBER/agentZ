@@ -182,9 +182,7 @@ func (r *Reconciler) reconcileAuthPolicies(ctx context.Context, pool *agentzv1al
 	desired := make(map[string]bool, len(definition.Members))
 	for i := range definition.Members {
 		member := &definition.Members[i]
-		isCodex := member.Provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindOpenAICodex
-		isCopilot := member.Provider.Spec.Kind == agentzv1alpha1.InferenceProviderKindGitHubCopilot
-		if !isCodex && !isCopilot {
+		if member.Provider.Spec.Kind != agentzv1alpha1.InferenceProviderKindOpenAICodex {
 			continue
 		}
 		policy := inference.RenderInferenceAuthPolicy(

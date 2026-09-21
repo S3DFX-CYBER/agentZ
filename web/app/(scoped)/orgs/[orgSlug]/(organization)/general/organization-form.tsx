@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic"
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import type { Area, Point } from "react-easy-crop"
-import { ImagePlus, Pencil, Save, Trash2, ZoomIn } from "lucide-react"
+import { ImagePlus, Pencil, Save, Trash2, ZoomIn, CircleAlert } from "lucide-react"
 import { toast } from "sonner"
 import {
   createOrganizationLogoUploadAction,
@@ -34,6 +34,7 @@ import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/component
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const Cropper = dynamic(() => import("react-easy-crop"), { ssr: false })
 const supportedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"])
@@ -361,7 +362,12 @@ export function OrganizationForm({ organization }: { organization: OrganizationS
                 spellCheck={false}
               />
             </Field>
-            {state.errors?.form ? <FieldError errors={[{ message: state.errors.form }]} /> : null}
+            {state.errors?.form ? (
+              <Alert variant="destructive">
+                <CircleAlert aria-hidden="true" />
+                <AlertDescription>{state.errors.form}</AlertDescription>
+              </Alert>
+            ) : null}
           </FieldGroup>
 
           <div className="flex justify-end pt-5">

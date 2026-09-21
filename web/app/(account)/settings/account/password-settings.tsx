@@ -4,7 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
-import { KeyRound } from "lucide-react"
+import { KeyRound, CircleAlert } from "lucide-react"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { passwordFieldDescription, passwordSchema } from "@/lib/password-policy"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const changePasswordSchema = z
   .object({
@@ -166,7 +167,12 @@ export function PasswordSettings() {
               )}
             />
           </FieldGroup>
-          {rootError ? <FieldError>{rootError}</FieldError> : null}
+          {rootError ? (
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertDescription>{rootError}</AlertDescription>
+            </Alert>
+          ) : null}
           <div>
             <Button type="submit" disabled={pendingAction}>
               {pendingAction ? (

@@ -12,7 +12,7 @@ import type { Route } from "next"
 import { useServerSorting } from "@/lib/use-token-pagination"
 
 const layout: Record<string, AdminColumnLayout> = {
-  name: { minWidth: 208, contentMaxWidth: 288 },
+  name: { minWidth: 160, contentMaxWidth: 240 },
   packages: { minWidth: 96, width: 96 },
   allowed_hosts: { minWidth: 96, width: 96 },
   models: { minWidth: 128, width: 128 },

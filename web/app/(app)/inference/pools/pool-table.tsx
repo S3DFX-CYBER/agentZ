@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -413,11 +412,11 @@ function DeletePoolDialog({
           </DialogDescription>
         </DialogHeader>
         {error ? (
-          <DialogAlert variant="destructive">
-            <CircleAlert />
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
             <AlertTitle>Pool could not be deleted</AlertTitle>
             <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
-          </DialogAlert>
+          </Alert>
         ) : null}
         <DialogFooter>
           <DialogClose asChild>
@@ -510,7 +509,7 @@ function PoolViewSheet({
           </div>
         ) : query.error instanceof Error ? (
           <Alert className="px-4" variant="destructive">
-            <CircleAlert />
+            <CircleAlert aria-hidden="true" />
             <AlertTitle>Pool could not be loaded</AlertTitle>
             <AlertDescription>{query.error.message}</AlertDescription>
           </Alert>
@@ -640,7 +639,7 @@ function PoolViewSheet({
               {query.data.pool.warnings.length ? (
                 query.data.pool.warnings.map((warning) => (
                   <Alert key={warning.code} variant="warning">
-                    <TriangleAlert />
+                    <TriangleAlert aria-hidden="true" />
                     <AlertTitle>These models use different API formats</AlertTitle>
                     <AlertDescription>
                       A request that uses provider-specific fields may fail after this Pool switches

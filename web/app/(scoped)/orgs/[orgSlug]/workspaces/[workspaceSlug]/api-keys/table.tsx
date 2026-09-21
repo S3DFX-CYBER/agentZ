@@ -2,18 +2,17 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Trash2 } from "lucide-react"
+import { MoreHorizontal, Trash2, CircleAlert } from "lucide-react"
 import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { AdminDataGrid, type AdminColumnLayout } from "@/components/admin-data-grid"
 import { AdministrationState } from "@/components/administration"
-import { AlertDescription } from "@/components/ui/alert"
+import { AlertDescription, Alert } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogAlert,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -268,9 +267,10 @@ function DeleteAPIKeyButton({
             </DialogDescription>
           </DialogHeader>
           {state.error ? (
-            <DialogAlert variant="destructive">
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
               <AlertDescription>{state.error.message}</AlertDescription>
-            </DialogAlert>
+            </Alert>
           ) : null}
           <DialogFooter>
             <DialogClose asChild>

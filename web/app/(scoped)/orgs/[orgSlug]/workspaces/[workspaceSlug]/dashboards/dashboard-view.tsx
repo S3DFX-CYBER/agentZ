@@ -34,6 +34,7 @@ import {
   Table2,
   Workflow,
   type LucideIcon,
+  CircleAlert,
 } from "lucide-react"
 import {
   listDashboardTableRows,
@@ -66,6 +67,7 @@ import {
   DashboardWidgetBodySkeleton,
   dashboardWidgetWidthClasses,
 } from "./dashboard-skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const DashboardChart = dynamic(
   () => import("./dashboard-chart").then((module) => module.DashboardChart),
@@ -245,9 +247,10 @@ export function DashboardView({
         </div>
       </div>
       {widgetsQuery.error ? (
-        <div className="text-destructive border-b px-6 py-3 text-sm">
-          {widgetsQuery.error.message}
-        </div>
+        <Alert variant="destructive" className="px-6 py-3">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{widgetsQuery.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       <div className="bg-muted/30 grid grid-cols-12 gap-2 p-2">
         {dashboard.widgets.map((widget) => (
@@ -347,9 +350,10 @@ function InvalidWidget({
   workspacePath: string
 }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-      <p className="text-sm font-medium">This widget’s stored data is invalid.</p>
-      <p className="text-muted-foreground text-xs">{message}</p>
+    <Alert variant="destructive" className="p-6">
+      <CircleAlert aria-hidden="true" />
+      <AlertTitle>This widget&apos;s stored data is invalid.</AlertTitle>
+      {message ? <AlertDescription>{message}</AlertDescription> : null}
       <Button asChild size="sm" variant="outline">
         <Link
           href={`${workspacePath}/sessions/new?agent=${encodeURIComponent(agentName)}` as Route}
@@ -357,7 +361,7 @@ function InvalidWidget({
           Ask agent to fix
         </Link>
       </Button>
-    </div>
+    </Alert>
   )
 }
 
@@ -506,10 +510,13 @@ function DashboardTable({
       className="h-full gap-0 [&_[data-slot=table-head]]:h-8 [&_[data-slot=table-head]]:px-4 [&>nav]:h-14 [&>nav]:shrink-0"
       emptyState={
         <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-          {query.error ? (
-            <span className="text-destructive">{query.error.message}</span>
+          {query.error || data?.error ? (
+            <Alert variant="destructive" className="p-4">
+              <CircleAlert aria-hidden="true" />
+              <AlertDescription>{query.error?.message ?? data?.error?.message}</AlertDescription>
+            </Alert>
           ) : (
-            (data?.error?.message ?? "No data")
+            "No data"
           )}
         </div>
       }
